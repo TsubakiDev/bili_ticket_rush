@@ -9,7 +9,7 @@ use crate::api::*;
 use crate::show_orderlist::get_orderlist;
 use common::captcha::handle_risk_verification;
 use common::login::{send_loginsms, sms_login};
-use common::taskmanager::*;
+use common::{account, taskmanager::*};
 use common::ticket::ConfirmTicketResult;
 use common::ticket::*;
 use tokio::runtime::Runtime;
@@ -19,7 +19,7 @@ pub struct TaskManagerImpl {
     task_sender: mpsc::Sender<TaskMessage>,
     result_receiver: mpsc::Receiver<TaskResult>,
     running_tasks: HashMap<String, Task>, // 使用 Task 枚举
-    runtime: Arc<Runtime>,
+    //runtime: Arc<Runtime>,
     _worker_thread: Option<thread::JoinHandle<()>>,
 }
 
@@ -86,7 +86,7 @@ impl TaskManager for TaskManagerImpl {
             task_sender: task_tx,
             result_receiver: result_rx,
             running_tasks: HashMap::new(),
-            runtime,
+            //runtime,
             _worker_thread: Some(worker),
         }
     }
@@ -927,6 +927,11 @@ async fn try_create_order(
                     100001 | 429 | 900001 => log::info!("b站限速，正常现象"),
                     100009 => {
                         log::info!("当前票种库存不足");
+                        //再次降速，不给b站服务器带来压力
+                        tokio::time::sleep(tokio::time::Duration::from_secs_f32(0.6)).await;
+                    }
+                    100008 => {
+                        log::info!("有尚未完成的订单，请前往b站订单列表查看");
                         //再次降速，不给b站服务器带来压力
                         tokio::time::sleep(tokio::time::Duration::from_secs_f32(0.6)).await;
                     }

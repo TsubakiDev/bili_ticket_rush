@@ -282,6 +282,7 @@ pub async fn get_ticket_token(
                 }) {
                     Ok(json) => {
                         log::debug!("获取票token：{}", json);
+                        log::debug!("ptoken/ctoken: {}, {}", json["data"]["ptoken"].as_str().unwrap_or("invalidPTK"), json["data"]["ctoken"].as_str().unwrap_or("invalidCTK"));
                         let errno_value = json.get("errno").and_then(|v| v.as_i64()).unwrap_or(-1);
                         let code_value = json.get("code").and_then(|v| v.as_i64()).unwrap_or(-1);
                         let code = if errno_value != -1 {
@@ -321,6 +322,10 @@ pub async fn get_ticket_token(
                                     .as_str()
                                     .unwrap_or("");
                                 let risk_param = json["data"]["ga_data"]["riskParams"].clone();
+                                let ptoken = json["data"]["ptoken"]
+                                    .as_str()
+                                    .unwrap_or("")
+                                    .to_string();
                                 let token_risk_param = TokenRiskParam {
                                     code: code as i32,
 
@@ -333,6 +338,7 @@ pub async fn get_ticket_token(
                                     ua: Some(ua.to_string()),
                                     v_voucher: Some(v_voucher.to_string()),
                                     risk_param: Some(risk_param.clone()),
+                                    ptoken: Some(ptoken.to_string())
                                 };
                                 log::debug!("{:?}", token_risk_param);
                                 return Err(token_risk_param);
@@ -356,6 +362,7 @@ pub async fn get_ticket_token(
                                     ua: None,
                                     v_voucher: None,
                                     risk_param: None,
+                                    ptoken: None,
                                 });
                             }
                         }
@@ -375,6 +382,7 @@ pub async fn get_ticket_token(
                             ua: None,
                             v_voucher: None,
                             risk_param: None,
+                            ptoken: None,
                         });
                     }
                 }
@@ -396,6 +404,7 @@ pub async fn get_ticket_token(
                     ua: None,
                     v_voucher: None,
                     risk_param: None,
+                    ptoken: None,
                 });
             }
         }
@@ -414,6 +423,7 @@ pub async fn get_ticket_token(
                 ua: None,
                 v_voucher: None,
                 risk_param: None,
+                ptoken: None,
             });
         }
     }

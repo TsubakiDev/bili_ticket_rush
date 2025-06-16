@@ -81,6 +81,7 @@ pub struct TokenRiskParam {
     pub ua: Option<String>,
     pub v_voucher: Option<String>,
     pub risk_param: Option<Value>,
+    pub ptoken: Option<String>,
 }
 
 #[derive(Clone, Debug)]
