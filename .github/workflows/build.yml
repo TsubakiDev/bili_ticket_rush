@@ -29,8 +29,10 @@ jobs:
       CARGO_TERM_COLOR: always
     steps:
     - uses: actions/checkout@v4
-    - name: Print github.ref
-      run: echo "${{ github.ref }}"
+    - name: Setup python 313
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.13.5'
     - name: Build Release
       if: matrix.debug == 'release'
       run: cargo build --verbose --release
