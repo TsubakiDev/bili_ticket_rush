@@ -56,13 +56,3 @@ fn main() -> Result<(), eframe::Error> {
         Box::new(|cc| Box::new(app::Myapp::new(cc))),
     )
 }
-
-// 确保资源目录存在
-fn create_resources_directory() {
-    let resources_dir = std::path::Path::new("resources");
-    if !resources_dir.exists() {
-        if let Err(e) = std::fs::create_dir_all(resources_dir) {
-            log::warn!("无法创建资源目录: {}", e);
-        }
-    }
-}

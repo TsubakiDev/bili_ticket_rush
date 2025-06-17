@@ -10,7 +10,7 @@ rand = "0.8"
 eframe = { version = "0.23.0", features = ["default"] }
 egui = "0.31.0"
 
-pyo3 = { version = "0.25.1", features = ["auto-initialize"] }
+pyo3 = "0.25.1"
 
 # log
 log = "0.4.27"

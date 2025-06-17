@@ -438,6 +438,8 @@ pub fn gen_01x88() -> String {
 }
 
 pub fn get_ctoken() -> PyResult<String> {
+    pyo3::prepare_freethreaded_python();
+
     Python::with_gil(|py| {
         let sys = py.import("sys")?;
         let os = py.import("os")?;
