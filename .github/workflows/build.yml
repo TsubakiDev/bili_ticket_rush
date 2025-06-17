@@ -25,7 +25,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     env:
       debug: ${{ matrix.debug }}
-      build_type: ${{ matrix.debug == 'release' && '正式版' || 'debug' }}
+      build_type: ${{ matrix.debug == 'release' && 'release' || 'debug' }}
       CARGO_TERM_COLOR: always
     steps:
     - uses: actions/checkout@v4
