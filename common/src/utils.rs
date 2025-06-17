@@ -116,7 +116,7 @@ impl Config {
         Ok(false)
     }
 
-    //删除账号，传uid
+    //删除账号, 传uid
     pub fn delete_account(&mut self, uid: i64) -> bool {
         if !self["accounts"].is_array() {
             return false;
@@ -179,7 +179,7 @@ impl IndexMut<&str> for Config {
         if let Value::Object(ref mut map) = self.data {
             map.entry(key.to_string()).or_insert(Value::Null)
         } else {
-            // 如果当前不是对象，将其转换为对象
+            // 如果当前不是对象, 将其转换为对象
             let mut map = Map::new();
             map.insert(key.to_string(), Value::Null);
             self.data = Value::Object(map);
@@ -310,7 +310,7 @@ pub fn load_texture_from_url(
             ))
         }
         Err(err) => {
-            log::warn!("加载图片至内存失败: {}，url:{}", err, url);
+            log::warn!("加载图片至内存失败: {}, url:{}", err, url);
             None
         }
     }
@@ -340,7 +340,7 @@ fn decrypt_data(iv: Vec<u8>, encrypted: &[u8]) -> Result<Vec<u8>, block_modes::B
     cipher.decrypt_vec(encrypted)
 }
 
-// 单例锁实现，防止程序多开
+// 单例锁实现, 防止程序多开
 use single_instance::SingleInstance;
 
 // 简化后的单例检查实现
@@ -350,8 +350,8 @@ pub fn ensure_single_instance() -> bool {
     let instance = SingleInstance::new(app_id).unwrap();
 
     if !instance.is_single() {
-        log::error!("程序已经在运行中，请勿重复启动！");
-        eprintln!("程序已经在运行中，请勿重复启动！");
+        log::error!("程序已经在运行中, 请勿重复启动！");
+        eprintln!("程序已经在运行中, 请勿重复启动！");
         std::thread::sleep(std::time::Duration::from_secs(2));
         false
     } else {
@@ -364,7 +364,7 @@ pub fn ensure_single_instance() -> bool {
 // 为不支持的平台提供默认实现
 #[cfg(not(any(target_os = "windows", target_os = "linux", target_os = "macos")))]
 fn is_process_running(_pid: u32) -> bool {
-    false // 不支持的平台，假设进程不存在
+    false // 不支持的平台, 假设进程不存在
 }
 
 #[cfg(target_os = "windows")]
@@ -383,7 +383,7 @@ fn is_process_running(pid: u32) -> bool {
                 && !stdout.contains("No tasks")
                 && stdout.contains(&format!("{}", pid))
         }
-        Err(_) => false, // 执行命令失败，假设进程不存在
+        Err(_) => false, // 执行命令失败, 假设进程不存在
     }
 }
 
@@ -406,7 +406,7 @@ fn is_process_running(pid: u32) -> bool {
             let stdout = String::from_utf8_lossy(&out.stdout);
             stdout.contains(&format!("{}", pid))
         }
-        Err(_) => false, // 执行命令失败，假设进程不存在
+        Err(_) => false, // 执行命令失败, 假设进程不存在
     }
 }
 
@@ -417,7 +417,7 @@ pub async fn get_now_time(client: &Client) -> i64 {
     let now_sec = match client.get(url).send().await {
         Ok(response) => match response.text().await {
             Ok(text) => {
-                log::debug!("API原始响应：{}", text);
+                log::debug!("API原始响应: {}", text);
 
                 let json_data: serde_json::Value = serde_json::from_str(&text).unwrap_or(json!({
                     "code": 0,
@@ -427,25 +427,25 @@ pub async fn get_now_time(client: &Client) -> i64 {
                 }));
 
                 let now_sec = json_data["data"]["now"].as_i64().unwrap_or(0);
-                log::debug!("解析出的网络时间(秒级)：{}", now_sec);
+                log::debug!("解析出的网络时间(秒级): {}", now_sec);
                 now_sec
             }
             Err(e) => {
-                log::debug!("解析网络时间响应失败：{}", e);
+                log::debug!("解析网络时间响应失败: {}", e);
                 0
             }
         },
         Err(e) => {
-            log::debug!("获取网络时间失败，原因：{}", e);
+            log::debug!("获取网络时间失败, 原因: {}", e);
             0
         }
     };
 
-    // 如果网络时间获取失败，使用本地时间 (转换为秒)
+    // 如果网络时间获取失败, 使用本地时间 (转换为秒)
     if now_sec == 0 {
         log::debug!("使用本地时间");
         let local_sec = chrono::Utc::now().timestamp();
-        log::debug!("本地时间(秒级)：{}", local_sec);
+        log::debug!("本地时间(秒级): {}", local_sec);
         local_sec
     } else {
         now_sec

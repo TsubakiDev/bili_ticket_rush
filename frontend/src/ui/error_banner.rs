@@ -85,7 +85,7 @@ pub fn render_notification_banner(app: &Myapp, ctx: &egui::Context) {
         });
 }
 
-// 为了向后兼容，保留原函数名，但内部调用新函数
+// 为了向后兼容, 保留原函数名, 但内部调用新函数
 pub fn render_error_banner(app: &Myapp, ctx: &egui::Context) {
     render_notification_banner(app, ctx);
 }

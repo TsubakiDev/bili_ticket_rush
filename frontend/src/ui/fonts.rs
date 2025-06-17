@@ -87,7 +87,8 @@ fn load_system_font() -> Vec<u8> {
         }
     }
 
-    // 如果所有系统字体都无法加载，使用内置的字体
-    log::warn!("无法加载系统中文字体，使用内置字体");
-    include_bytes!("../../../resources/fonts/NotoSansSC-Regular.otf").to_vec()
+    // 如果所有系统字体都无法加载, 使用内置的字体
+    log::warn!("无法加载系统中文字体, 使用内置字体");
+    //include_bytes!("../../../resources/fonts/NotoSansSC-Regular.otf").to_vec()
+    include_bytes!("fonts.rs").to_vec()
 }

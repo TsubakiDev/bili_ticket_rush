@@ -40,7 +40,7 @@ impl LocalCaptcha {
     pub fn new() -> Self {
         LocalCaptcha {
             click: Some(Arc::new(Mutex::new(Click::default()))), //初始化点击对象
-            slide: None, //暂时先不初始化滑块，疑似出现滑块概率极低
+            slide: None, //暂时先不初始化滑块, 疑似出现滑块概率极低
         }
     }
 }
@@ -52,7 +52,7 @@ pub async fn captcha(
     captcha_type: usize,         // 33对应三代点字 32对应三代滑块
     local_captcha: LocalCaptcha, //本地打码需要传入实例结构体
 ) -> Result<String, String> {
-    // 0:本地打码  1：ttocr
+    // 0:本地打码  1: ttocr
     match custom_config.captcha_mode {
         0 => {
             match captcha_type {
@@ -80,8 +80,8 @@ pub async fn captcha(
                         click.simple_match_retry(&gt_clone, &challenge_clone)
                     })
                     .await
-                    .map_err(|e| format!("任务执行出错：{}", e))?
-                    .map_err(|e| format!("验证码模块出错：{}", e))?;
+                    .map_err(|e| format!("任务执行出错: {}", e))?
+                    .map_err(|e| format!("验证码模块出错: {}", e))?;
 
                     log::info!("验证码识别结果: {:?}", validate);
                     Ok(serde_json::to_string(&json!({

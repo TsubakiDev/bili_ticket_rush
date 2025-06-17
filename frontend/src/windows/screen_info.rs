@@ -21,23 +21,21 @@ pub fn show(app: &mut Myapp, ctx: &egui::Context, uid: i64) {
             return;
         }
     };
-    
+
     // 默认选择第一个场次（如果尚未选择）
     if app.selected_screen_index.is_none() && !ticket_data.screen_list.is_empty() {
         app.selected_screen_index = Some(0);
     }
-    
+
     bilibili_ticket.id_bind = ticket_data.id_bind as usize;
-    
+
     // 创建局部变量用于窗口控制
     let mut close_requested = false;
     let mut refresh_requested = false;
-    
+
     // 获取屏幕尺寸用于约束窗口大小
     let screen_size = ctx.input(|i| i.screen_rect.size());
-    let max_width = screen_size.x * 0.9;
-    let max_height = screen_size.y * 0.8;
-    
+
     egui::Window::new("项目详情")
     .open(&mut window_open)
     .default_size([800.0, 600.0])
@@ -77,7 +75,6 @@ pub fn show(app: &mut Myapp, ctx: &egui::Context, uid: i64) {
                             "售罄" => egui::Color32::from_rgb(200, 50, 50),
                             _ => ui.visuals().text_color(),
                         };
-                        
                         ui.label(
                             egui::RichText::new(format!("状态: {}", ticket_data.sale_flag))
                                 .color(status_color)
@@ -102,7 +99,6 @@ pub fn show(app: &mut Myapp, ctx: &egui::Context, uid: i64) {
                             ui.horizontal_wrapped(|ui| {
                                 for (idx, screen) in ticket_data.screen_list.iter().enumerate() {
                                     let is_selected = app.selected_screen_index == Some(idx);
-                                    
                                     // 根据销售状态设置按钮颜色
                                     let button_color = match screen.sale_flag.display_name.as_str() {
                                         "在售" => egui::Color32::from_rgb(50, 200, 50),
@@ -110,7 +106,7 @@ pub fn show(app: &mut Myapp, ctx: &egui::Context, uid: i64) {
                                         "售罄" => egui::Color32::from_rgb(200, 50, 50),
                                         _ => ui.visuals().widgets.inactive.bg_fill,
                                     };
-                                    
+
                                     let response = ui.add(
                                         egui::Button::new(
                                             egui::RichText::new(format!("{} ({})", screen.name, &screen.sale_flag.display_name))
@@ -138,14 +134,12 @@ pub fn show(app: &mut Myapp, ctx: &egui::Context, uid: i64) {
             if let Some(idx) = app.selected_screen_index {
                 if idx < ticket_data.screen_list.len() {
                     let selected_screen = &ticket_data.screen_list[idx];
-                    
                     // 场次信息卡片 - 增强视觉样式
                     let bg_color = if !ctx.style().visuals.dark_mode {
                         egui::Color32::from_rgb(245, 245, 250)
                     } else {
                         egui::Color32::from_rgb(20, 20, 25)
                     };
-                    
                     egui::Frame::none()
                         .fill(bg_color)
                         .rounding(8.0)
@@ -158,7 +152,6 @@ pub fn show(app: &mut Myapp, ctx: &egui::Context, uid: i64) {
                                 ui.horizontal(|ui| {
                                     ui.heading("场次信息");
                                     ui.add_space(10.0);
-                                    
                                     // 场次状态标签
                                     let status_color = match selected_screen.sale_flag.display_name.as_str() {
                                         "在售" => egui::Color32::from_rgb(50, 200, 50),
@@ -166,16 +159,13 @@ pub fn show(app: &mut Myapp, ctx: &egui::Context, uid: i64) {
                                         "售罄" => egui::Color32::from_rgb(200, 50, 50),
                                         _ => ui.visuals().text_color(),
                                     };
-                                    
                                     ui.label(
                                         egui::RichText::new(&selected_screen.sale_flag.display_name)
                                             .color(status_color)
                                             .strong()
                                     );
                                 });
-                                
                                 ui.add_space(5.0);
-                                
                                 // 时间信息网格布局
                                 egui::Grid::new("screen_info_grid")
                                     .num_columns(2)
@@ -185,11 +175,9 @@ pub fn show(app: &mut Myapp, ctx: &egui::Context, uid: i64) {
                                         ui.label(egui::RichText::new("开始时间:").strong());
                                         ui.label(format_timestamp(selected_screen.start_time));
                                         ui.end_row();
-                                        
                                         ui.label(egui::RichText::new("售票开始:").strong());
                                         ui.label(format_timestamp(selected_screen.sale_start));
                                         ui.end_row();
-                                        
                                         ui.label(egui::RichText::new("售票结束:").strong());
                                         ui.label(format_timestamp(selected_screen.sale_end));
                                         ui.end_row();
@@ -217,7 +205,6 @@ pub fn show(app: &mut Myapp, ctx: &egui::Context, uid: i64) {
 
                             ui.separator();
                             ui.add_space(8.0);
-
                             // 票种列表 - 使用网格布局
                             for ticket in &selected_screen.ticket_list {
                                 egui::Grid::new(format!("ticket_row_{}", ticket.id))
@@ -227,7 +214,6 @@ pub fn show(app: &mut Myapp, ctx: &egui::Context, uid: i64) {
                                     .show(ui, |ui| {
                                         // 票种名称
                                         ui.label(&ticket.desc);
-                                        
                                         // 价格
                                         let price = format!("¥{:.2}", ticket.price as f64 / 100.0);
                                         ui.label(
@@ -235,7 +221,6 @@ pub fn show(app: &mut Myapp, ctx: &egui::Context, uid: i64) {
                                                 .strong()
                                                 .color(egui::Color32::from_rgb(245, 108, 108))
                                         );
-                                        
                                         // 状态
                                         let status_color = match ticket.sale_flag.display_name.as_str() {
                                             "在售" => egui::Color32::from_rgb(50, 200, 50),
@@ -247,7 +232,6 @@ pub fn show(app: &mut Myapp, ctx: &egui::Context, uid: i64) {
                                             egui::RichText::new(&ticket.sale_flag.display_name)
                                                 .color(status_color)
                                         );
-                                        
                                         // 操作按钮
                                         let (button_text, button_color) = if ticket.clickable {
                                             ("选择", egui::Color32::from_rgb(65, 150, 65))
@@ -256,34 +240,26 @@ pub fn show(app: &mut Myapp, ctx: &egui::Context, uid: i64) {
                                         } else {
                                             ("不可选", egui::Color32::from_rgb(150, 150, 150))
                                         };
-                                        
                                         let button = egui::Button::new(button_text)
                                             .fill(button_color)
                                             .stroke(egui::Stroke::new(1.0, egui::Color32::BLACK))
                                             .min_size(egui::Vec2::new(80.0, 30.0));
-                                        
                                         if ui.add(button).clicked() {
                                             if !ticket.clickable {
-                                                log::error!("请注意！该票种目前不可售！但是会尝试下单，如果该票持续不可售，多次下单不可售票种可能会被b站拉黑");
+                                                log::error!("请注意！该票种目前不可售！但是会尝试下单, 如果该票持续不可售, 多次下单不可售票种可能会被b站拉黑");
                                             }
                                             app.selected_screen_id = Some(selected_screen.id as i64);
                                             app.selected_ticket_id = Some(ticket.id as i64);
                                             app.show_screen_info = None;
                                             bilibili_ticket.screen_id = selected_screen.id.to_string();
-                                            
-                                            log::debug!("场次ID: {}, 票种ID: {}, 项目ID: {}", 
-                                                selected_screen.id, ticket.id, ticket.project_id);
-                                            
+                                            log::debug!("场次ID: {}, 票种ID: {}, 项目ID: {}", selected_screen.id, ticket.id, ticket.project_id);
                                             app.ticket_id = ticket.project_id.to_string();
                                             bilibili_ticket.select_ticket_id = Some(ticket.id.to_string());
                                             app.confirm_ticket_info = Some(bilibili_ticket.uid.to_string());
-                                            
                                             log::info!("已选择: {} [{}]", &ticket.desc, ticket.id);
                                         }
-                                        
                                         ui.end_row();
                                     });
-                                
                                 ui.add_space(5.0);
                             }
                         });
@@ -294,20 +270,17 @@ pub fn show(app: &mut Myapp, ctx: &egui::Context, uid: i64) {
 
             // 项目详细信息区
             ui.collapsing(
-                egui::RichText::new("▸ 查看详细信息").strong(),
+                egui::RichText::new("查看详细信息").strong(),
                 |ui| {
                     ui.add_space(5.0);
-                    
                     // 基本信息部分
                     ui.label(egui::RichText::new("基本信息").heading());
                     ui.add_space(5.0);
-                    
                     egui::Frame::group(ui.style())
                         .inner_margin(10.0)
                         .show(ui, |ui| {
                             ui.label(format!("项目ID: {}", ticket_data.id));
                             ui.add_space(8.0);
-                            
                             if let Some(desc) = &ticket_data.performance_desc {
                                 for item in &desc.list {
                                     if item.module == "base_info" {
@@ -329,16 +302,12 @@ pub fn show(app: &mut Myapp, ctx: &egui::Context, uid: i64) {
                                 }
                             }
                         });
-                    
                     ui.add_space(15.0);
-                    
-                    // JSON元数据部分 - 固定高度，避免展开时窗口大小变化
+                    // JSON元数据部分 - 固定高度, 避免展开时窗口大小变化
                     ui.label(egui::RichText::new("JSON元数据").heading());
                     ui.add_space(5.0);
-                    
                     let json_str = serde_json::to_string_pretty(&ticket_data).unwrap_or_else(|_| "无法格式化JSON".to_string());
-                    
-                    // 固定高度区域，避免展开时窗口大小变化
+                    // 固定高度区域, 避免展开时窗口大小变化
                     egui::Frame::group(ui.style())
                         .inner_margin(5.0)
                         .show(ui, |ui| {
@@ -364,7 +333,6 @@ pub fn show(app: &mut Myapp, ctx: &egui::Context, uid: i64) {
             if ui.button("关闭").clicked() {
                 close_requested = true;
             }
-            
             ui.with_layout(egui::Layout::right_to_left(egui::Align::Min), |ui| {
                 if ui.button("刷新信息").clicked() {
                     refresh_requested = true;
@@ -372,13 +340,13 @@ pub fn show(app: &mut Myapp, ctx: &egui::Context, uid: i64) {
             });
         });
     });
-    
+
     // 处理关闭请求
     if close_requested {
         window_open = false;
     }
-    
-    // 如果窗口关闭，清理数据
+
+    // 如果窗口关闭, 清理数据
     if !window_open {
         app.show_screen_info = None;
         bilibili_ticket.project_info = None;

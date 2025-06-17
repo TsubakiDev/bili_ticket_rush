@@ -1,6 +1,6 @@
 use std::default;
 
-use crate::taskmanager::{PushRequest, PushType, TaskManager, TaskRequest, TaskStatus};
+use crate::task_manager::{PushRequest, PushType, TaskManager, TaskRequest, TaskStatus};
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 
@@ -76,7 +76,7 @@ impl PushConfig {
         });
         match task_manager.submit_task(push_request) {
             Ok(task_id) => {
-                log::debug!("提交全渠道推送任务成功，任务ID: {}", task_id);
+                log::debug!("提交全渠道推送任务成功, 任务ID: {}", task_id);
             }
             Err(e) => {
                 log::error!("提交推送任务失败: {}", e);
@@ -162,7 +162,7 @@ impl PushConfig {
             return (
                 false,
                 format!(
-                    "{} 成功 / {} 失败。失败详情: {}",
+                    "{} 成功 / {} 失败.失败详情: {}",
                     success_count,
                     failure_count,
                     failures.join("; ")
@@ -231,7 +231,7 @@ impl PushConfig {
                         if status.is_success() {
                             (true, "推送成功".to_string())
                         } else {
-                            (false, format!("推送失败，状态码: {}", status))
+                            (false, format!("推送失败, 状态码: {}", status))
                         }
                     }
                     Err(e) => (false, format!("读取响应失败: {}", e)),
@@ -246,10 +246,10 @@ impl PushConfig {
             "title":title,
             "body":message,
             "level":"timeSensitive",
-           /*   #推送中断级别。
-                #active：默认值，系统会立即亮屏显示通知
-                #timeSensitive：时效性通知，可在专注状态下显示通知。
-                #passive：仅将通知添加到通知列表，不会亮屏提醒。  */
+           /*   #推送中断级别.
+                #active: 默认值, 系统会立即亮屏显示通知
+                #timeSensitive: 时效性通知, 可在专注状态下显示通知.
+                #passive: 仅将通知添加到通知列表, 不会亮屏提醒.  */
             "badge":1,
             "icon":"https://sr.mihoyo.com/favicon-mi.ico",
             "group":"biliticket",
@@ -266,7 +266,7 @@ impl PushConfig {
                         if status.is_success() {
                             (true, "推送成功".to_string())
                         } else {
-                            (false, format!("推送失败，状态码: {}", status))
+                            (false, format!("推送失败, 状态码: {}", status))
                         }
                     }
                     Err(e) => (false, format!("读取响应失败: {}", e)),
@@ -293,7 +293,7 @@ impl PushConfig {
                         if status.is_success() {
                             (true, "推送成功".to_string())
                         } else {
-                            (false, format!("推送失败，状态码: {}", status))
+                            (false, format!("推送失败, 状态码: {}", status))
                         }
                     }
                     Err(e) => (false, format!("读取响应失败: {}", e)),
@@ -320,7 +320,7 @@ impl PushConfig {
                         if status.is_success() {
                             (true, "推送成功".to_string())
                         } else {
-                            (false, format!("推送失败，状态码: {}", status))
+                            (false, format!("推送失败, 状态码: {}", status))
                         }
                     }
                     Err(e) => (false, format!("读取响应失败: {}", e)),
@@ -358,7 +358,7 @@ impl PushConfig {
                         if status.is_success() {
                             (true, "推送成功".to_string())
                         } else {
-                            (false, format!("推送失败，状态码: {}", status))
+                            (false, format!("推送失败, 状态码: {}", status))
                         }
                     }
                     Err(e) => (false, format!("读取响应失败: {}", e)),
@@ -396,7 +396,7 @@ impl PushConfig {
                         if status.is_success() {
                             (true, "推送成功".to_string())
                         } else {
-                            (false, format!("推送失败，状态码: {}", status))
+                            (false, format!("推送失败, 状态码: {}", status))
                         }
                     }
                     Err(e) => (false, format!("读取响应失败: {}", e)),

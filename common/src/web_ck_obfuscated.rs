@@ -1,11 +1,14 @@
 use chrono::{Local as _l1, Utc as _u1};
 use hmac::{Hmac as _h1, Mac as _m1};
 use md5;
-use rand::{Rng as _r1, seq::SliceRandom as _sr};
+use pyo3::types::{PyAnyMethods, PyModule};
+use pyo3::{PyResult, Python};
+use rand::Rng as _r1;
 use reqwest::Client as _c1;
 use serde_json::Value as _v1;
 use sha2::Sha256 as _s256;
 use std::collections::HashMap as _hm;
+use std::ptr::null;
 use std::time::{Duration as _d1, SystemTime as _st, UNIX_EPOCH as _ue};
 use uuid::Uuid as _uid;
 
@@ -72,7 +75,7 @@ pub async fn gen_buvid3and4(client: _c1) -> Result<(String, String, String), Str
                     return Err(_x2(format!("获取 buvid 失败: {}", _e1)));
                 }
 
-                let _msg = format!("第{}次获取 buvid 失败: {}，稍后重试", _i1, _e1);
+                let _msg = format!("第{}次获取 buvid 失败: {}, 稍后重试", _i1, _e1);
                 log::warn!("{}", _dx2(&_msg));
 
                 let _f = (_i1 * 100) as u64;
@@ -102,7 +105,7 @@ async fn _z1(
     let _res = _req.send().await.map_err(|e| format!("请求失败: {}", e))?;
 
     if !_res.status().is_success() {
-        return Err(format!("请求失败，状态码: {}", _res.status()));
+        return Err(format!("请求失败, 状态码: {}", _res.status()));
     }
 
     let _j: _v1 = _res
@@ -284,7 +287,7 @@ pub async fn gen_ckbili_ticket(client: _c1) -> Result<(String, String), String> 
                     return Err(format!("获取 ckbili_ticket 失败: {}", _e));
                 }
 
-                log::warn!("第{}次获取 ckbili_ticket 失败: {}，稍后重试", _i, _e);
+                log::warn!("第{}次获取 ckbili_ticket 失败: {}, 稍后重试", _i, _e);
                 std::thread::sleep(_d1::from_millis(_DELAY + (_i as u64 * 50)));
             }
         }
@@ -337,7 +340,7 @@ async fn _send_ticket_request(
         .map_err(|e| format!("请求失败: {}", e))?;
 
     if !_resp.status().is_success() {
-        return Err(format!("请求失败，状态码: {}", _resp.status()));
+        return Err(format!("请求失败, 状态码: {}", _resp.status()));
     }
 
     let _json: _v1 = _resp
@@ -432,6 +435,26 @@ pub fn gen_01x88() -> String {
     } else {
         _result
     }
+}
+
+pub fn get_ctoken() -> PyResult<String> {
+    Python::with_gil(|py| {
+        let sys = py.import("sys")?;
+        let os = py.import("os")?;
+        let binding = sys.getattr("path")?;
+        let sys_path = binding.downcast::<pyo3::types::PyList>()?;
+        let cwd = os.call_method0("getcwd")?;
+        sys_path.call_method1("append", (cwd,))?;
+
+        let util = PyModule::import(py, "bilibili_util").expect("Failed to load bilibili_util.");
+
+        let ctoken = util
+            .getattr("BilibiliClient")?
+            .call_method1("generate_ctoken", (1,))?
+            .extract()?; // Instantiate class
+
+        Ok(ctoken)
+    })
 }
 
 fn _rand_bool(probability: f64) -> bool {

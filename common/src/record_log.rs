@@ -124,7 +124,7 @@ impl log::Log for CollectorLogger {
 
             println!("{}", log_message);
 
-            // 单独处理文件写入，避免同时持有多个锁
+            // 单独处理文件写入, 避免同时持有多个锁
             let _ = write_to_log_file(&log_message);
         }
     }

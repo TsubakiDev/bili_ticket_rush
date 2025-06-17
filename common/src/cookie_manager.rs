@@ -70,9 +70,9 @@ impl CookieManager {
     pub async fn new(
         original_cookie: &str,
         user_agent: Option<&str>,
-        create_type: usize, //0：默认网页浏览器 1：app
+        create_type: usize, //0: 默认网页浏览器 1: app
     ) -> Self {
-        let mut cookies = Self::parse_cookie_string(original_cookie);
+        let cookies = Self::parse_cookie_string(original_cookie);
 
         match create_type {
             0 => {
@@ -190,7 +190,7 @@ impl CookieManager {
                                     .as_secs()
                                     as i64;
 
-                                // 未过期，使用已有的
+                                // 未过期, 使用已有的
                                 if current_time < expires_time {
                                     log::debug!(
                                         "使用现有 bili_ticket (有效期至: {})",
@@ -198,7 +198,7 @@ impl CookieManager {
                                     );
                                     (existing_ticket.unwrap(), existing_expires.unwrap()) // 删除了return关键字
                                 } else {
-                                    log::debug!("bili_ticket 已过期，重新生成");
+                                    log::debug!("bili_ticket 已过期, 重新生成");
                                     // 生成新的
                                     gen_ckbili_ticket(client.clone())
                                         .await
@@ -343,7 +343,7 @@ impl CookieManager {
         cookie_str
     }
     //解析cookie字符串
-    //TODO：（ck登录待去多余字符）
+    //TODO: （ck登录待去多余字符）
     fn parse_cookie_string(cookie_str: &str) -> CookiesData {
         let mut map = HashMap::new();
         let cookie_jar = Arc::new(Mutex::new(reqwest::cookie::Jar::default()));

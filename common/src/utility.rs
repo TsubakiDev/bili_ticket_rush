@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 pub struct CustomConfig {
     pub open_custom_ua: bool,    //是否开启自定义UA
     pub custom_ua: String,       //自定义UA
-    pub captcha_mode: usize,     //验证码模式   //0:本地打码  1：ttocr
+    pub captcha_mode: usize,     //验证码模式   //0:本地打码  1: ttocr
     pub ttocr_key: String,       //ttocr key
     pub preinput_phone1: String, //预填账号1手机号
     pub preinput_phone2: String, //预填账号2手机号

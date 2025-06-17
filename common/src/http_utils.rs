@@ -133,7 +133,7 @@ pub fn request_json_form_sync(
         if let Some(referer_str) = referer {
             req = req.header(header::REFERER, referer_str);
         }
-        // 创建一个特殊的表单，保留数字类型
+        // 创建一个特殊的表单, 保留数字类型
         let mut form = std::collections::HashMap::new();
         for (key, value) in json_form {
             match value {

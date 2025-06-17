@@ -53,6 +53,13 @@ pub struct ConfirmTicketInfo {
     pub price: i64,
 }
 
+#[derive(Clone, Debug, Deserialize, Serialize)]
+pub struct TokenSet {
+    pub token: String,
+    pub ptoken: String,
+    pub ctoken: String,
+}
+
 //确认订单结构体
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct ConfirmTicketResult {
@@ -126,10 +133,10 @@ impl BilibiliTicket {
     ) -> Self {
         let mut finally_ua = String::new();
         if config.custom_ua != "" {
-            log::info!("使用自定义UA：{}", config.custom_ua);
+            log::info!("使用自定义UA: {}", config.custom_ua);
             finally_ua.push_str(&config.custom_ua);
         } else {
-            log::info!("使用默认UA：{}", ua);
+            log::info!("使用默认UA: {}", ua);
             finally_ua.push_str(ua);
         }
         let mut headers = header::HeaderMap::new();
@@ -141,12 +148,12 @@ impl BilibiliTicket {
                         headers.insert(header::USER_AGENT, ua_value);
                     }
                     Err(e) => {
-                        log::error!("client插入ua失败！原因：{}", e);
+                        log::error!("client插入ua失败！原因: {}", e);
                     }
                 }
             }
             Err(e) => {
-                log::error!("cookie设置失败！原因：{:?}", e);
+                log::error!("cookie设置失败！原因: {:?}", e);
             }
         }
 
@@ -158,7 +165,7 @@ impl BilibiliTicket {
         {
             Ok(client) => client,
             Err(e) => {
-                log::error!("初始化client失败！，原因：{:?}", e);
+                log::error!("初始化client失败！, 原因: {:?}", e);
                 Client::new()
             }
         };
@@ -186,7 +193,7 @@ impl BilibiliTicket {
             device_id: "".to_string(),
             id_bind: 999,
         };
-        log::debug!("新建抢票对象：{:?}", new);
+        log::debug!("新建抢票对象: {:?}", new);
         new
     }
 }
@@ -199,7 +206,7 @@ pub struct TicketInfo {
     pub start_time: i64,
     pub end_time: i64,
     pub pick_seat: usize,             //0:不选座 1:选座
-    pub project_type: usize,          //未知作用，bw2024是type1
+    pub project_type: usize,          //未知作用, bw2024是type1
     pub express_fee: usize,           //快递费
     pub sale_begin: i64,              //开售时间
     pub sale_end: i64,                //截止时间
@@ -251,7 +258,7 @@ impl Default for SaleFlag {
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct ScreenTicketInfo {
-    pub saleStart: usize,        //开售时间(时间戳)   eg：1720260000
+    pub saleStart: usize,        //开售时间(时间戳)   eg: 1720260000
     pub saleEnd: usize,          //截止时间(时间戳)
     pub id: usize,               //票种id
     pub project_id: usize,       //项目id
@@ -259,7 +266,7 @@ pub struct ScreenTicketInfo {
     pub desc: String,            //票种描述
     pub sale_start: String,      //开售时间（字符串）    eg:2024-07-06 18:00:00
     pub sale_end: String,        //截止时间（字符串）
-    pub r#type: usize,           //类型 关键词替换，对应”type“
+    pub r#type: usize,           //类型 关键词替换, 对应”type“
     pub sale_type: usize,        //销售状态
     pub is_sale: usize,          //是否销售？0是1否
     pub num: usize,              //数量
@@ -279,7 +286,7 @@ pub struct DescribeList {
 pub struct ModuleItem {
     pub module: String,
 
-    // details 可能是字符串或数组，使用 serde_json::Value 处理多态
+    // details 可能是字符串或数组, 使用 serde_json::Value 处理多态
     #[serde(default)]
     pub details: Value,
 

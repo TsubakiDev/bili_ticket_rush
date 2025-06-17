@@ -2,6 +2,7 @@ use common::cookie_manager::CookieManager;
 use common::http_utils::request_get;
 use common::login::QrCodeLoginStatus;
 use common::ticket::*;
+use common::web_ck_obfuscated::get_ctoken;
 use rand::{Rng, thread_rng};
 use reqwest::Client;
 use serde_json;
@@ -19,7 +20,7 @@ pub async fn get_countdown(
         Some(info) => info.sale_begin,
         None => return Err("获取开始时间失败".to_string()),
     };
-    log::debug!("获取开始时间(秒级)：{}", sale_begin_sec);
+    log::debug!("获取开始时间(秒级): {}", sale_begin_sec);
 
     // 获取网络时间 (秒级)
     let url = "https://api.bilibili.com/x/click-interface/click/now";
@@ -27,7 +28,7 @@ pub async fn get_countdown(
     let now_sec = match response.send().await {
         Ok(data) => {
             let text = data.text().await.unwrap_or_default();
-            log::debug!("API原始响应：{}", text);
+            log::debug!("API原始响应: {}", text);
 
             let json_data: serde_json::Value = serde_json::from_str(&text).unwrap_or(json!({
                 "code": 0,
@@ -37,20 +38,20 @@ pub async fn get_countdown(
             }));
 
             let now_sec = json_data["data"]["now"].as_i64().unwrap_or(0);
-            log::debug!("解析出的网络时间(秒级)：{}", now_sec);
+            log::debug!("解析出的网络时间(秒级): {}", now_sec);
             now_sec
         }
         Err(e) => {
-            log::debug!("获取网络时间失败，原因：{}", e);
+            log::debug!("获取网络时间失败, 原因: {}", e);
             0
         }
     };
 
-    // 如果网络时间获取失败，使用本地时间 (转换为秒)
+    // 如果网络时间获取失败, 使用本地时间 (转换为秒)
     let now_sec = if now_sec == 0 {
         log::debug!("使用本地时间");
         let local_sec = chrono::Utc::now().timestamp();
-        log::debug!("本地时间(秒级)：{}", local_sec);
+        log::debug!("本地时间(秒级): {}", local_sec);
         local_sec
     } else {
         now_sec
@@ -59,7 +60,7 @@ pub async fn get_countdown(
     // 计算倒计时(秒级)
     let countdown_sec = sale_begin_sec - now_sec;
     log::debug!(
-        "计算倒计时(秒)：开始时间[{}] - 当前时间[{}] = 倒计时[{}]秒",
+        "计算倒计时(秒): 开始时间[{}] - 当前时间[{}] = 倒计时[{}]秒",
         sale_begin_sec,
         now_sec,
         countdown_sec
@@ -83,20 +84,20 @@ pub async fn get_buyer_info(
                     rt.block_on(resp.text())
                 }) {
                     Ok(text) => {
-                        log::debug!("获取购票人信息：{}", text);
+                        log::debug!("获取购票人信息: {}", text);
                         match serde_json::from_str::<BuyerInfoResponse>(&text) {
                             Ok(buyer_info) => {
                                 return Ok(buyer_info);
                             }
                             Err(e) => {
-                                log::error!("获取购票人信息json解析失败：{}", e);
-                                return Err(format!("获取购票人信息json解析失败：{}", e));
+                                log::error!("获取购票人信息json解析失败: {}", e);
+                                return Err(format!("获取购票人信息json解析失败: {}", e));
                             }
                         }
                     }
                     Err(e) => {
-                        log::error!("获取购票人信息失败：{}", e);
-                        return Err(format!("获取购票人信息失败：{}", e));
+                        log::error!("获取购票人信息失败: {}", e);
+                        return Err(format!("获取购票人信息失败: {}", e));
                     }
                 }
             } else {
@@ -130,21 +131,21 @@ pub async fn get_project(
                     rt.block_on(resp.text())
                 }) {
                     Ok(text) => {
-                        log::debug!("获取项目详情：{}", text);
+                        log::debug!("获取项目详情: {}", text);
                         // 尝试常规解析
                         match serde_json::from_str::<InfoResponse>(&text) {
                             Ok(ticket_info) => {
                                 return Ok(ticket_info);
                             }
                             Err(e) => {
-                                log::error!("获取项目详情json解析失败：{}", e);
-                                return Err(format!("获取项目详情json解析失败：{}", e));
+                                log::error!("获取项目详情json解析失败: {}", e);
+                                return Err(format!("获取项目详情json解析失败: {}", e));
                             }
                         }
                     }
                     Err(e) => {
-                        log::error!("获取项目详情失败：{}", e);
-                        return Err(format!("获取项目详情失败：{}", e));
+                        log::error!("获取项目详情失败: {}", e);
+                        return Err(format!("获取项目详情失败: {}", e));
                     }
                 }
             } else {
@@ -225,7 +226,7 @@ pub async fn poll_qrcode_login(qrcode_key: &str, user_agent: Option<&str>) -> Qr
             86038 => return QrCodeLoginStatus::Expired,
             86090 => {
                 log::info!(
-                    "二维码已扫描，等待确认 (尝试 {} / {} 次)",
+                    "二维码已扫描, 等待确认 (尝试 {} / {} 次)",
                     attempt,
                     max_attempts
                 );
@@ -233,7 +234,7 @@ pub async fn poll_qrcode_login(qrcode_key: &str, user_agent: Option<&str>) -> Qr
             }
             86101 => {
                 log::info!(
-                    "二维码已生成，等待扫描 (尝试 {} / {} 次)",
+                    "二维码已生成, 等待扫描 (尝试 {} / {} 次)",
                     attempt,
                     max_attempts
                 );
@@ -256,14 +257,14 @@ pub async fn get_ticket_token(
     screen_id: &str,
     ticket_id: &str,
     count: i16,
-) -> Result<String, TokenRiskParam> {
+) -> Result<TokenSet, TokenRiskParam> {
     let params = serde_json::json!({
         "project_id": project_id,
         "screen_id": screen_id,
         "sku_id": ticket_id,
         "count": count,
         "order_type": 1,
-        "token": "",
+        "token": get_ctoken().unwrap(),
         "requestSource": "neul-next",
         "newRisk": "true",
     });
@@ -272,6 +273,9 @@ pub async fn get_ticket_token(
         "https://show.bilibili.com/api/ticket/order/prepare?project_id={}",
         project_id
     );
+
+    log::debug!("获取票token请求URL: {}", url);
+
     let response = cookie_manager.post(&url).await.json(&params).send().await;
     match response {
         Ok(resp) => {
@@ -281,8 +285,7 @@ pub async fn get_ticket_token(
                     rt.block_on(resp.json::<serde_json::Value>())
                 }) {
                     Ok(json) => {
-                        log::debug!("获取票token：{}", json);
-                        log::debug!("ptoken/ctoken: {}, {}", json["data"]["ptoken"].as_str().unwrap_or("invalidPTK"), json["data"]["ctoken"].as_str().unwrap_or("invalidCTK"));
+                        log::debug!("获取票token: {}", json);
                         let errno_value = json.get("errno").and_then(|v| v.as_i64()).unwrap_or(-1);
                         let code_value = json.get("code").and_then(|v| v.as_i64()).unwrap_or(-1);
                         let code = if errno_value != -1 {
@@ -295,7 +298,13 @@ pub async fn get_ticket_token(
                         match code {
                             0 => {
                                 let token = json["data"]["token"].as_str().unwrap_or("");
-                                return Ok(token.to_string());
+                                let ptoken = json["data"]["ptoken"].as_str().unwrap_or("");
+                                let ctoken = get_ctoken().unwrap();
+                                return Ok(TokenSet {
+                                    token: token.to_string(),
+                                    ptoken: ptoken.to_string(),
+                                    ctoken: ctoken.to_string(),
+                                });
                             }
                             -401 | 401 => {
                                 log::info!("需要进行人机验证");
@@ -322,10 +331,8 @@ pub async fn get_ticket_token(
                                     .as_str()
                                     .unwrap_or("");
                                 let risk_param = json["data"]["ga_data"]["riskParams"].clone();
-                                let ptoken = json["data"]["ptoken"]
-                                    .as_str()
-                                    .unwrap_or("")
-                                    .to_string();
+                                let ptoken =
+                                    json["data"]["ptoken"].as_str().unwrap_or("").to_string();
                                 let token_risk_param = TokenRiskParam {
                                     code: code as i32,
 
@@ -338,14 +345,14 @@ pub async fn get_ticket_token(
                                     ua: Some(ua.to_string()),
                                     v_voucher: Some(v_voucher.to_string()),
                                     risk_param: Some(risk_param.clone()),
-                                    ptoken: Some(ptoken.to_string())
+                                    ptoken: Some(ptoken.to_string()),
                                 };
                                 log::debug!("{:?}", token_risk_param);
                                 return Err(token_risk_param);
                             }
                             _ => {
                                 log::error!(
-                                    "获取token失败，未知错误码：{}，错误信息：{}，请提issue修复此问题",
+                                    "获取token失败, 未知错误码: {}, 错误信息: {}, 请提issue修复此问题",
                                     code,
                                     msg
                                 );
@@ -388,7 +395,7 @@ pub async fn get_ticket_token(
                 }
             } else {
                 log::error!(
-                    "获取票token失败，服务器不期待响应，响应状态码：{}",
+                    "获取票token失败, 服务器不期待响应, 响应状态码: {}",
                     resp.status()
                 );
                 return Err(TokenRiskParam {
@@ -409,7 +416,7 @@ pub async fn get_ticket_token(
             }
         }
         Err(e) => {
-            log::error!("获取票token失败，错误信息：{}", e);
+            log::error!("获取票token失败, 错误信息: {}", e);
             return Err(TokenRiskParam {
                 code: 999 as i32,
 
@@ -433,10 +440,16 @@ pub async fn confirm_ticket_order(
     cookie_manager: Arc<CookieManager>,
     project_id: &str,
     token: &str,
+    ptoken: &str,
 ) -> Result<ConfirmTicketResult, String> {
+    let timestamp = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_secs() as u32;
+
     let url = format!(
-        "https://show.bilibili.com/api/ticket/order/confirmInfo?token={}&voucher=&project_id={}&requestSource=neul-next",
-        token, project_id
+        "https://show.bilibili.com/api/ticket/order/confirmInfo?project_id={}&ptoken={}&requestSource=neul-next&show_cashier=1&timestamp={}&token={}",
+        project_id, ptoken, timestamp, token
     );
     let response = cookie_manager
         .get(&url)
@@ -452,7 +465,7 @@ pub async fn confirm_ticket_order(
         .text()
         .await
         .map_err(|e| format!("获取响应文本失败: {}", e))?;
-    log::debug!("确认订单响应：{}", text);
+    log::debug!("确认订单响应: {}", text);
     let json: serde_json::Value =
         serde_json::from_str(&text).map_err(|e| format!("解析响应文本失败: {}", e))?;
     if json["errno"] != 0 {
@@ -470,18 +483,21 @@ pub async fn create_order(
     cookie_manager: Arc<CookieManager>,
     project_id: &str,
     token: &str,
+    ptoken: &str,
     confirm_result: &ConfirmTicketResult,
     biliticket: &BilibiliTicket,
     buyer_info: &Vec<BuyerInfo>,
     is_mobile: bool,
     need_retry: bool,
     fast_mode: bool,
-    screen_size: Option<(u32, u32)>, // 可选参数：(宽度,高度)
+    screen_size: Option<(u32, u32)>, // 可选参数: (宽度,高度)
 ) -> Result<Value, i32> {
     let url = format!(
-        "https://show.bilibili.com/api/ticket/order/createV2?project_id={}",
-        project_id
+        "https://show.bilibili.com/api/ticket/order/createV2?project_id={}&ptoken={}",
+        project_id, ptoken
     );
+
+    log::debug!("create_order_url: {}", url);
 
     // 选择适当的位置类型
     let position_type = if need_retry && is_mobile {
@@ -502,6 +518,7 @@ pub async fn create_order(
             .get_cookie("buvid3")
             .unwrap_or("".to_string())
     );
+
     let mut input_risk_header = HashMap::new();
     input_risk_header.insert("X-Risk-Header", risk_header.as_str());
 
@@ -537,6 +554,8 @@ pub async fn create_order(
                 "screen_id": biliticket.screen_id.parse::<i64>().unwrap_or(0),
                 "sku_id": ticket_id_int,
                 "token": token,
+                "ptoken": ptoken,
+                "ctoken": get_ctoken().unwrap_or("".to_string()),
                 "buyer": no_bind_buyer_info.name,
                 "tel": no_bind_buyer_info.tel,
                 "clickPosition": click_position,
@@ -556,6 +575,8 @@ pub async fn create_order(
                 "screen_id": biliticket.screen_id.parse::<i64>().unwrap_or(0),
                 "sku_id": ticket_id_int,
                 "token": token,
+                "ptoken": ptoken,
+                "ctoken": get_ctoken().unwrap_or("".to_string()),
                 "buyer_info": serde_json::to_string(buyer_info).unwrap_or_default(),
                 "clickPosition": click_position,
                 "newRisk": true,
@@ -569,12 +590,12 @@ pub async fn create_order(
             data
         }
         _ => {
-            log::error!("购票人信息错误，id_bind: {}", biliticket.id_bind);
+            log::error!("购票人信息错误, id_bind: {}", biliticket.id_bind);
             return Err(919); // 错误的购票人信息
         }
     };
 
-    log::debug!("抢票data ：{:?}", data);
+    log::debug!("抢票data : {:?}", data);
     let response = cookie_manager
         .post_with_headers(&url, input_risk_header)
         .await
@@ -602,7 +623,7 @@ pub async fn create_order(
     let errno_value = value.get("errno").and_then(|v| v.as_i64()).unwrap_or(-1);
     let code_value = value.get("code").and_then(|v| v.as_i64()).unwrap_or(-1);
 
-    // 只要有一个错误码不是0，就认为有错误
+    // 只要有一个错误码不是0, 就认为有错误
     if errno_value != 0 || (errno_value == -1 && code_value != 0) {
         return Err(if errno_value != -1 {
             errno_value as i32
@@ -620,13 +641,9 @@ pub async fn check_fake_ticket(
     pay_token: &str,
     order_id: i64,
 ) -> Result<Value, String> {
-    let timestamp = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap_or_default()
-        .as_secs() as u32;
     let mut url = format!(
-        "https://show.bilibili.com/api/ticket/order/createstatus?project_id={}&token={}&timestamp={}",
-        project_id, pay_token, timestamp
+        "https://show.bilibili.com/api/ticket/order/createstatus?orderId={}&project_id={}&token={}",
+        order_id, project_id, pay_token
     );
     if order_id != 0 {
         url = format!("{}&orderId={}", url, order_id);
@@ -658,10 +675,10 @@ pub enum ClickPositionType {
 /// 生成随机点击位置
 ///
 /// # 参数
-/// * `position_type` - 位置类型：PC/手机/重试按钮
-/// * `fast_mode` - 时间间隔模式：true为快模式(0.8-4.6秒)，false为慢模式(4-12秒)
-/// * `screen_width` - (可选)手机屏幕宽度，用于计算比例坐标，默认1080
-/// * `screen_height` - (可选)手机屏幕高度，用于计算比例坐标，默认2400
+/// * `position_type` - 位置类型: PC/手机/重试按钮
+/// * `fast_mode` - 时间间隔模式: true为快模式(0.8-4.6秒), false为慢模式(4-12秒)
+/// * `screen_width` - (可选)手机屏幕宽度, 用于计算比例坐标, 默认1080
+/// * `screen_height` - (可选)手机屏幕高度, 用于计算比例坐标, 默认2400
 ///
 pub async fn random_click_position(
     position_type: ClickPositionType,
@@ -683,7 +700,7 @@ pub async fn random_click_position(
         }
         ClickPositionType::MobileConfirm => {
             // 手机端确认下单按钮位置(右下角)
-            // 使用比例计算：x在屏幕宽度的0.55-0.9之间，y在屏幕底部附近
+            // 使用比例计算: x在屏幕宽度的0.55-0.9之间, y在屏幕底部附近
             let x_ratio = rng.gen_range(0.55..0.9);
             let y_ratio = rng.gen_range(0.9..0.95);
 
@@ -694,14 +711,14 @@ pub async fn random_click_position(
         }
         ClickPositionType::RetryButton => {
             // 手机版"再试一次"按钮位置(屏幕中间靠下)
-            // x坐标在屏幕宽度的1/3到2/3之间，y坐标在屏幕高度的2/3左右
+            // x坐标在屏幕宽度的1/3到2/3之间, y坐标在屏幕高度的2/3左右
             let x_ratio = rng.gen_range(0.33..0.67); // 屏幕宽度的2/6到4/6之间
             let y_ratio = rng.gen_range(0.6..0.7); // 屏幕高度的2/3左右
 
             let x = (mobile_width as f32 * x_ratio) as i32;
             let y = (mobile_height as f32 * y_ratio) as i32;
 
-            (x, y, mobile_width.min(30) as i32 / 4) // 偏移较大，因为这是个大按钮
+            (x, y, mobile_width.min(30) as i32 / 4) // 偏移较大, 因为这是个大按钮
         }
     };
 
@@ -721,10 +738,10 @@ pub async fn random_click_position(
 
     // 根据模式生成不同的延迟时间
     let random_delay = if fast_mode {
-        // 快模式：0.8-4.6秒
+        // 快模式: 0.8-4.6秒
         rng.gen_range(800..4600)
     } else {
-        // 慢模式：4-12秒
+        // 慢模式: 4-12秒
         rng.gen_range(4000..12000)
     };
 

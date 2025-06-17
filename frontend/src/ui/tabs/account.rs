@@ -13,7 +13,7 @@ pub fn render(app: &mut Myapp, ui: &mut egui::Ui) {
     let mut example_account = Account {
         uid: 0,
         name: "请登录账号".to_string(),
-        vip_label: "未登录，请登录账号".to_string(),
+        vip_label: "未登录, 请登录账号".to_string(),
         level: "未登录".to_string(),
         cookie: "".to_string(),
         csrf: "".to_string(),
@@ -54,7 +54,7 @@ pub fn render(app: &mut Myapp, ui: &mut egui::Ui) {
             &mut app.show_orderlist_window,
         );
     } else {
-        // 如果头像加载失败，显示默认头像
+        // 如果头像加载失败, 显示默认头像
         if let Some(texture) = &app.default_avatar_texture {
             show_user(
                 ui,
@@ -120,13 +120,13 @@ fn draw_user_avatar(ui: &mut egui::Ui, texture: &egui::TextureHandle, size: f32)
         let circle_mask =
             egui::Shape::circle_filled(rect.center(), size / 2.0 - 1.0, egui::Color32::WHITE);
 
-        // 2. 将图像绘制为自定义着色器，使用圆形遮罩
+        // 2. 将图像绘制为自定义着色器, 使用圆形遮罩
         let uv = egui::Rect::from_min_max(egui::pos2(0.0, 0.0), egui::pos2(1.0, 1.0));
 
         // 使用裁剪圆绘制
         painter.add(circle_mask);
 
-        // 以混合模式绘制图像，只在圆形区域内可见
+        // 以混合模式绘制图像, 只在圆形区域内可见
         painter.image(texture.id(), rect, uv, egui::Color32::WHITE);
 
         // 添加边框
@@ -148,7 +148,7 @@ fn load_user_avatar(
     cookie_manager: Option<Arc<CookieManager>>,
     account: &mut Account,
 ) -> Option<egui::TextureHandle> {
-    // 如果用户已登录且提供了头像路径，尝试加载
+    // 如果用户已登录且提供了头像路径, 尝试加载
     if let Some(texture) = &account.avatar_texture {
         return Some(texture.clone());
     }
@@ -185,7 +185,7 @@ fn load_default_avatar(ctx: &egui::Context, app: &mut Myapp) {
             ));
         }
         Err(_) => {
-            // 图片加载失败，生成占位符头像
+            // 图片加载失败, 生成占位符头像
             app.default_avatar_texture = generate_placeholder_avatar(ctx);
         }
     }
@@ -246,7 +246,7 @@ fn show_user(
         .show(ui, |ui| {
             // 水平布局放置图片和文字
             ui.horizontal(|ui| {
-                // 左侧图片区域，这里使用小尺寸的圆形图片
+                // 左侧图片区域, 这里使用小尺寸的圆形图片
                 let image_size = 84.0;
                 draw_user_avatar(ui, texture, image_size);
 
@@ -444,7 +444,7 @@ fn show_user(
 
 fn dynamic_caculate_space(
     ui: &mut egui::Ui,
-    obj_space: f32, //如果有三个按钮，假设每个按钮尺寸x轴长度=120.0，那么就传入120.0
+    obj_space: f32, //如果有三个按钮, 假设每个按钮尺寸x轴长度=120.0, 那么就传入120.0
     number: f32,    //按钮数量
 ) {
     let available_space = ui.available_width();

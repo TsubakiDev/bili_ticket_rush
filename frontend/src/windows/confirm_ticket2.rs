@@ -1,12 +1,12 @@
 use crate::app::Myapp;
 use common::cookie_manager::CookieManager;
-use common::taskmanager::{GrabTicketRequest, TaskRequest, TaskStatus};
+use common::task_manager::{GrabTicketRequest, TaskRequest, TaskStatus};
 use eframe::egui;
 use egui::{Color32, RichText, Stroke, Vec2};
 use std::sync::Arc;
 
 /// 显示捡漏模式的确认窗口
-/// 只需要选择购票人，其他信息都使用默认值
+/// 只需要选择购票人, 其他信息都使用默认值
 pub fn show(app: &mut Myapp, ctx: &egui::Context, uid: &i64) {
     let mut open = app.confirm_ticket_info.is_some();
     if !open {
@@ -67,11 +67,11 @@ pub fn show(app: &mut Myapp, ctx: &egui::Context, uid: &i64) {
                 .rounding(8.0)
                 .inner_margin(12.0)
                 .show(ui, |ui| {
-                    ui.label(RichText::new("捡漏模式说明：").strong());
+                    ui.label(RichText::new("捡漏模式说明: ").strong());
                     ui.label("1. 系统将持续监控所有可能的场次和票种");
-                    ui.label("2. 一旦发现可购买票种，会立即尝试下单");
-                    /* ui.label("3. 由于速度原因，可能会遇到更多的风控验证"); */
-                    ui.label("3. 暂时只支持实名制票捡漏，请务必选择购票人，否则无法进行购票");
+                    ui.label("2. 一旦发现可购买票种, 会立即尝试下单");
+                    /* ui.label("3. 由于速度原因, 可能会遇到更多的风控验证"); */
+                    ui.label("3. 暂时只支持实名制票捡漏, 请务必选择购票人, 否则无法进行购票");
                 });
             ui.add_space(10.0);
             // 计算已选择的购票人数量
@@ -90,7 +90,7 @@ pub fn show(app: &mut Myapp, ctx: &egui::Context, uid: &i64) {
             ui.add_space(5.0);
             // 购票人列表
             if buyers.is_empty() {
-                ui.label(RichText::new("暂无购票人信息，请先添加购票人").color(Color32::DARK_RED));
+                ui.label(RichText::new("暂无购票人信息, 请先添加购票人").color(Color32::DARK_RED));
             } else {
                 app.is_loading = false;
                 egui::ScrollArea::vertical()
@@ -151,12 +151,12 @@ pub fn show(app: &mut Myapp, ctx: &egui::Context, uid: &i64) {
                                                     };
                                                     // 处理选择按钮点击
                                                     if select_button.clicked() {
-                                                        // 多选模式：切换选中状态
+                                                        // 多选模式: 切换选中状态
                                                         if app.selected_buyer_list.is_none() {
                                                             app.selected_buyer_list = Some(Vec::new());
                                                         }
                                                         let buyer_list = app.selected_buyer_list.as_mut().unwrap();
-                                                        // 如果已经选中，则移除；否则添加
+                                                        // 如果已经选中, 则移除；否则添加
                                                         if let Some(pos) = buyer_list.iter().position(|b| b.id == buyer.id) {
                                                             buyer_list.remove(pos);
                                                             log::debug!("移除购票人: {}", buyer.name);
@@ -199,14 +199,14 @@ pub fn show(app: &mut Myapp, ctx: &egui::Context, uid: &i64) {
             ui.separator();
             ui.add_space(10.0);
             ui.heading("关键词过滤");
-            ui.label(RichText::new("输入需要过滤的关键词，多个关键词用空格分隔。当捡漏到包含这些关键词的标题时将自动跳过。").color(Color32::DARK_GRAY));
+            ui.label(RichText::new("输入需要过滤的关键词, 多个关键词用空格分隔.当捡漏到包含这些关键词的标题时将自动跳过.").color(Color32::DARK_GRAY));
             ui.add_space(5.0);
             // 文本输入框
             ui.horizontal(|ui| {
-                ui.label("过滤关键词：");
+                ui.label("过滤关键词: ");
                 let text_edit = ui.text_edit_singleline(&mut app.skip_words_input);
                 if text_edit.changed() {
-                    // 当文本输入改变时，更新关键词列表
+                    // 当文本输入改变时, 更新关键词列表
                     let words: Vec<String> = app.skip_words_input
                         .split_whitespace()
                         .map(|s| s.to_string())
@@ -224,7 +224,7 @@ pub fn show(app: &mut Myapp, ctx: &egui::Context, uid: &i64) {
                     // 用于记录需要删除的词
                     let mut word_to_delete: Option<String> = None;
                     ui.horizontal_wrapped(|ui| {
-                        ui.label("当前过滤词：");
+                        ui.label("当前过滤词: ");
                         for word in words.iter() {
                             let chip = egui::Label::new(
                                 RichText::new(format!(" {} ", word))
@@ -233,7 +233,7 @@ pub fn show(app: &mut Myapp, ctx: &egui::Context, uid: &i64) {
                             )
                             .sense(egui::Sense::click());
                             if ui.add(chip).clicked() {
-                                // 只记录要删除的词，不立即修改
+                                // 只记录要删除的词, 不立即修改
                                 word_to_delete = Some(word.clone());
                             }
                             ui.add_space(5.0);
@@ -246,7 +246,7 @@ pub fn show(app: &mut Myapp, ctx: &egui::Context, uid: &i64) {
                                 words_mut.remove(pos);
                                 // 更新输入框内容
                                 app.skip_words_input = words_mut.join(" ");
-                                // 如果关键词列表为空，设置为None
+                                // 如果关键词列表为空, 设置为None
                                 if words_mut.is_empty() {
                                     app.skip_words = None;
                                 }
@@ -257,7 +257,7 @@ pub fn show(app: &mut Myapp, ctx: &egui::Context, uid: &i64) {
             }
             ui.horizontal(|ui| {
                 ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                    // 只有选择了购票人，按钮才可用
+                    // 只有选择了购票人, 按钮才可用
                     let has_buyers = app.selected_buyer_list.as_ref().map_or(false, |list| !list.is_empty());
                     if ui.add_enabled(
                         has_buyers,
@@ -268,7 +268,7 @@ pub fn show(app: &mut Myapp, ctx: &egui::Context, uid: &i64) {
                         if let Some(ref buyer_list) = app.selected_buyer_list {
                             if !buyer_list.is_empty() {
                                 let ids: Vec<i64> = buyer_list.iter().map(|b| b.id).collect();
-                                log::info!("开始捡漏模式，选择的购票人IDs: {:?}", ids);
+                                log::info!("开始捡漏模式, 选择的购票人IDs: {:?}", ids);
                                 // 获取必要的数据
                                 let biliticket = &mut app.bilibiliticket_list[biliticket_index];
                                 let project_id = biliticket.project_id.clone();
@@ -279,7 +279,7 @@ pub fn show(app: &mut Myapp, ctx: &egui::Context, uid: &i64) {
                                     task_id: "".to_string(),
                                     uid: biliticket_uid,
                                     project_id,
-                                    // 在捡漏模式下，这些值会被后端动态设置，所以这里设为空字符串
+                                    // 在捡漏模式下, 这些值会被后端动态设置, 所以这里设为空字符串
                                     screen_id: "".to_string(),
                                     ticket_id: "".to_string(),
                                     count: buyer_list.len() as i16,
@@ -296,7 +296,7 @@ pub fn show(app: &mut Myapp, ctx: &egui::Context, uid: &i64) {
                                 // 提交到任务管理器
                                 match app.task_manager.submit_task(TaskRequest::GrabTicketRequest(grab_ticket_request)) {
                                     Ok(task_id) => {
-                                        log::info!("提交捡漏模式任务成功，任务ID: {}", task_id);
+                                        log::info!("提交捡漏模式任务成功, 任务ID: {}", task_id);
                                         app.confirm_ticket_info = None;
                                     },
                                     Err(e) => {

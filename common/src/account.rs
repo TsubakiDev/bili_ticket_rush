@@ -1,8 +1,5 @@
 use crate::cookie_manager::CookieManager;
-use crate::{
-    cookie_manager,
-    http_utils::request_get_sync,
-};
+use crate::{cookie_manager, http_utils::request_get_sync};
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use serde_json;
@@ -16,7 +13,7 @@ pub struct Account {
     pub csrf: String,               //csrf
     pub is_login: bool,             //是否登录
     pub account_status: String,     //账号状态
-    pub vip_label: String,          //大会员，对应/nav请求中data['vip_label']['text']
+    pub vip_label: String,          //大会员, 对应/nav请求中data['vip_label']['text']
     pub is_active: bool,            //该账号是否启动抢票
     pub avatar_url: Option<String>, //头像地址
     #[serde(skip)]
@@ -71,7 +68,7 @@ pub fn add_account(cookie: &str, client: &Client, ua: &str) -> Result<Account, S
             uid: data["mid"].as_i64().unwrap_or(0),
             name: data["uname"]
                 .as_str()
-                .unwrap_or("账号信息获取失败，请删除重新登录")
+                .unwrap_or("账号信息获取失败, 请删除重新登录")
                 .to_string(),
             level: data["level_info"]["current_level"]
                 .as_i64()
@@ -97,7 +94,6 @@ pub fn add_account(cookie: &str, client: &Client, ua: &str) -> Result<Account, S
 pub fn signout_account(account: &Account) -> Result<bool, String> {
     let data = serde_json::json!({
         "biliCSRF" : account.csrf,
-
     });
     let rt = tokio::runtime::Runtime::new().unwrap();
     let response = rt.block_on(async {
@@ -116,7 +112,7 @@ pub fn signout_account(account: &Account) -> Result<bool, String> {
         Ok(res) => res,
         Err(e) => return Err(format!("请求失败: {}", e)),
     };
-    log::debug!("退出登录响应： {:?}", resp);
+    log::debug!("退出登录响应:  {:?}", resp);
     Ok(resp.status().is_success())
 }
 
@@ -140,7 +136,7 @@ fn extract_csrf(cookie: &str) -> String {
         }
     }
 
-    // 没找到，记录并返回空字符串
+    // 没找到, 记录并返回空字符串
     log::warn!("无法从cookie中提取CSRF值");
     String::new()
 }
@@ -178,7 +174,7 @@ pub fn create_client_for_account(cookie: &str) -> reqwest::Client {
     headers.insert(
         header::USER_AGENT,
         header::HeaderValue::from_str(&user_agent).unwrap_or_else(|_| {
-            // 提供一个替代值，而不是使用 unwrap_or_default()
+            // 提供一个替代值, 而不是使用 unwrap_or_default()
             header::HeaderValue::from_static("Mozilla/5.0")
         }),
     );

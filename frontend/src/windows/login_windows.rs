@@ -15,7 +15,7 @@ pub fn show(app: &mut Myapp, ctx: &egui::Context) {
     let mut window_open = app.show_login_windows;
     //save_texture = app.login
 
-    // 如果图像还没加载，则加载它们
+    // 如果图像还没加载, 则加载它们
     if !app.login_texture.left_conrner_texture.is_some() {
         // 左下角图片的Base64字符串
         let left_corner_base64 = get_left_base64();
@@ -45,7 +45,7 @@ pub fn show(app: &mut Myapp, ctx: &egui::Context) {
                 ui.vertical_centered(|ui| {
                     ui.add_space(15.0);
                     ui.horizontal(|ui| {
-                        ui.add_space(190.0); //居中，我实在想不到其他好办法了，高度bug卡着
+                        ui.add_space(190.0); //居中, 我实在想不到其他好办法了, 高度bug卡着
                         if ui
                             .link(egui::RichText::new("扫码登录").size(18.0))
                             .clicked()
@@ -97,14 +97,14 @@ pub fn show(app: &mut Myapp, ctx: &egui::Context) {
                     ui.add_space(10.0);
 
                     //控制窗口大小
-                    //我也不知道是什么原因，只要竖直不addspace高度为300，窗口就会以最小显示，
+                    //我也不知道是什么原因, 只要竖直不addspace高度为300, 窗口就会以最小显示,
                     //设置窗口最小尺寸也没有用
                     ui.add_space(200.0);
                 })
             });
             // 获取窗口大小和位置信息
             let window_rect = ui.min_rect();
-            let scale_factor = 0.8; //缩放比例，按80%缩小
+            let scale_factor = 0.8; //缩放比例, 按80%缩小
             // 绘制左下角图片
             if let Some(texture) = &app.login_texture.left_conrner_texture {
                 let image_size = texture.size_vec2();
@@ -180,14 +180,14 @@ fn ui_qrcode_login(ui: &mut egui::Ui, app: &mut Myapp) {
                     });
 
                     // 创建新的轮询任务
-                    let qrcode_req = common::taskmanager::QrCodeLoginRequest {
+                    let qrcode_req = common::task_manager::QrCodeLoginRequest {
                         qrcode_key: code,
                         qrcode_url: app.login_qrcode_url.clone().unwrap(),
                         user_agent: Some(app.custom_config.custom_ua.clone()),
                     };
 
                     // 提交任务到任务管理器
-                    let request = common::taskmanager::TaskRequest::QrCodeLoginRequest(qrcode_req);
+                    let request = common::task_manager::TaskRequest::QrCodeLoginRequest(qrcode_req);
                     match app.task_manager.submit_task(request) {
                         Ok(task_id) => {
                             app.qrcode_polling_task_id = Some(task_id);
@@ -200,7 +200,7 @@ fn ui_qrcode_login(ui: &mut egui::Ui, app: &mut Myapp) {
                 }
             }
             Err(e) => {
-                eprintln!("获取二维码失败，原因: {}", e);
+                eprintln!("获取二维码失败, 原因: {}", e);
                 return;
             }
         }
@@ -250,7 +250,7 @@ fn ui_password_login(ui: &mut egui::Ui, app: &mut Myapp) {
 
 fn ui_sms_login(ui: &mut egui::Ui, app: &mut Myapp) {
     ui.vertical_centered(|ui| {
-        //phone的要传入app，参数从里面获得
+        //phone的要传入app, 参数从里面获得
         phone_input(ui, "手机号", app, "请输入手机号", true);
         app.show_log_window = true;
         ui.add_space(10.0);
@@ -272,13 +272,13 @@ fn ui_sms_login(ui: &mut egui::Ui, app: &mut Myapp) {
         .rounding(15.0); //圆角成度
         let response = ui.add(button);
         if response.clicked() {
-            let request = common::taskmanager::SubmitLoginSmsRequest {
+            let request = common::task_manager::SubmitLoginSmsRequest {
                 phone: app.login_input.phone.clone(),
                 code: app.login_input.sms_code.clone(),
                 captcha_key: app.sms_captcha_key.clone(),
                 client: app.client.clone(),
             };
-            let request = common::taskmanager::TaskRequest::SubmitLoginSmsRequest(request);
+            let request = common::task_manager::TaskRequest::SubmitLoginSmsRequest(request);
             match app.task_manager.submit_task(request) {
                 Ok(task_id) => {
                     app.pending_sms_task_id = Some(task_id);
@@ -298,7 +298,7 @@ fn ui_ck_login(ui: &mut egui::Ui, app: &mut Myapp) {
             ui,
             "请输入ck",
             &mut app.login_input.cookie,
-            "请输入ck，不知道不要填写",
+            "请输入ck, 不知道不要填写",
             false,
         );
 
@@ -399,13 +399,13 @@ pub fn phone_input(
         .clicked()
     {
         log::info!("{}", app.login_input.phone);
-        let sms_req = common::taskmanager::LoginSmsRequest {
+        let sms_req = common::task_manager::LoginSmsRequest {
             phone: app.login_input.phone.clone(),
             client: app.client.clone(),
             custom_config: custom_config.clone(),
             local_captcha: local_captcha.clone(),
         };
-        let request = common::taskmanager::TaskRequest::LoginSmsRequest(sms_req);
+        let request = common::task_manager::TaskRequest::LoginSmsRequest(sms_req);
         match app.task_manager.submit_task(request) {
             Ok(task_id) => {
                 app.pending_sms_task_id = Some(task_id);

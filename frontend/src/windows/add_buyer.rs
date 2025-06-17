@@ -40,7 +40,7 @@ pub fn show(app: &mut Myapp, ctx: &egui::Context, uid: &str) {
                 ui.add_space(8.0);
                 common_input(
                     ui,
-                    "姓名：",
+                    "姓名: ",
                     &mut app.add_buyer_input.name,
                     "请输入你的真实姓名",
                     false,
@@ -51,7 +51,7 @@ pub fn show(app: &mut Myapp, ctx: &egui::Context, uid: &str) {
                 ui.add_space(8.0);
                 common_input(
                     ui,
-                    "手机号：",
+                    "手机号: ",
                     &mut app.add_buyer_input.phone,
                     "请输入你的手机号",
                     true,
@@ -64,7 +64,7 @@ pub fn show(app: &mut Myapp, ctx: &egui::Context, uid: &str) {
             ui.horizontal(|ui| {
                 ui.add_space(8.0);
                 ui.label(
-                    egui::RichText::new("证件类型：")
+                    egui::RichText::new("证件类型: ")
                         .size(15.0)
                         .color(egui::Color32::from_rgb(0, 0, 0)),
                 );
@@ -80,7 +80,7 @@ pub fn show(app: &mut Myapp, ctx: &egui::Context, uid: &str) {
                 ui.add_space(8.0);
                 common_input(
                     ui,
-                    "证件号码：",
+                    "证件号码: ",
                     &mut app.add_buyer_input.id_number,
                     get_id_hint(app.add_buyer_input.id_type),
                     true,

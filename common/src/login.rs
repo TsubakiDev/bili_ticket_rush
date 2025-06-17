@@ -181,7 +181,7 @@ pub async fn sms_login(
     let cookie_headers = login_response
         .headers()
         .get_all(reqwest::header::SET_COOKIE);
-    log::debug!("headers返回：{:?}", cookie_headers);
+    log::debug!("headers返回: {:?}", cookie_headers);
     for value in cookie_headers {
         if let Ok(cookie_str) = value.to_str() {
             if let Some(end_pos) = cookie_str.find(';') {
@@ -196,10 +196,10 @@ pub async fn sms_login(
         .json::<serde_json::Value>()
         .await
         .map_err(|e| format!("解析JSON失败: {}", e))?;
-    log::debug!("登录接口响应：{:?}", json_response);
+    log::debug!("登录接口响应: {:?}", json_response);
     if json_response["code"].as_i64() == Some(0) {
         log::info!("短信登录成功！");
-        log::info!("登录cookie：{:?}", all_cookies);
+        log::info!("登录cookie: {:?}", all_cookies);
         return Ok(all_cookies.to_vec().join(";"));
     }
     Err("短信登录失败".to_string())

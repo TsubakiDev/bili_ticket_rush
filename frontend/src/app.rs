@@ -23,9 +23,9 @@ use common::cookie_manager::CookieManager;
 use common::login::LoginInput;
 use common::push::*;
 use common::show_orderlist::OrderResponse;
-use common::taskmanager::GetAllorderRequest;
-use common::taskmanager::TaskRequest;
-use common::taskmanager::*;
+use common::task_manager::GetAllorderRequest;
+use common::task_manager::TaskRequest;
+use common::task_manager::*;
 use common::ticket::*;
 use common::utility::CustomConfig;
 use common::utils::*;
@@ -45,7 +45,7 @@ pub struct Myapp {
     pub is_loading: bool,
     //运行状态（显示用）
     pub running_status: String,
-    //自定义背景图  （未启用，效果不好，预留暂时不用）
+    //自定义背景图  （未启用, 效果不好, 预留暂时不用）
     pub background_texture: Option<egui::TextureHandle>,
     //日志记录
     pub logs: Vec<String>,
@@ -88,10 +88,10 @@ pub struct Myapp {
     //登录方式
     pub login_method: String,
 
-    //用于登录的client，登录后存入account
+    //用于登录的client, 登录后存入account
     pub client: Client,
 
-    //登录用，防止重复刷新二维码
+    //登录用, 防止重复刷新二维码
     pub login_qrcode_url: Option<String>,
 
     //登录用异步回调taskid
@@ -112,7 +112,7 @@ pub struct Myapp {
     //删除账号
     pub delete_account: Option<String>,
 
-    //cookie登录，暂存cookie
+    //cookie登录, 暂存cookie
     pub cookie_login: Option<String>,
 
     //该账号开启抢票开关
@@ -122,7 +122,7 @@ pub struct Myapp {
     pub add_buyer_input: AddBuyerInput,
 
     //添加购票人窗口
-    pub show_add_buyer_window: Option<String>, //如果是bool类型会导致无法对应申请添加的账号，
+    pub show_add_buyer_window: Option<String>, //如果是bool类型会导致无法对应申请添加的账号,
     //所以使用string表示要添加购票人的账号的uid
     pub show_orderlist_window: Option<String>, //订单列表窗口的账号uid
 
@@ -151,7 +151,7 @@ pub struct Myapp {
 
     pub ticket_info_last_request_time: Option<std::time::Instant>, // 上次请求的时间
 
-    pub confirm_ticket_info: Option<String>, //确认抢票信息（购票人，预填手机号）
+    pub confirm_ticket_info: Option<String>, //确认抢票信息（购票人, 预填手机号）
 
     pub selected_buyer_list: Option<Vec<BuyerInfo>>, // 选中的购票人ID
 
@@ -254,7 +254,7 @@ impl Myapp {
             client: Client::new(),
             default_avatar_texture: None,
             running_status: String::from("空闲ing"),
-            ticket_id: String::from("100596"),
+            ticket_id: String::from("101751"),
             // 初始化任务管理器
             task_manager: Box::new(TaskManagerImpl::new()),
             account_manager: AccountManager {
@@ -390,7 +390,7 @@ impl Myapp {
             self.error_banner_start_time = Some(std::time::Instant::now());
             self.error_banner_opacity = 1.0;
         }
-        // 然后检查是否为成功消息，但使用更严格的条件
+        // 然后检查是否为成功消息, 但使用更严格的条件
         else if message.contains("info:") || 
                 message.contains("INFO:") || 
                 message.contains("Info:") || 
@@ -482,8 +482,8 @@ impl Myapp {
         let results = self.task_manager.get_results();
 
         // 存储需要记录的日志消息
-        let mut pending_logs: Vec<String> = Vec::new();
-        let mut account_updates: Vec<String> = Vec::new();
+        let pending_logs: Vec<String> = Vec::new();
+        let account_updates: Vec<String> = Vec::new();
 
         for result in results {
             match result {
@@ -502,7 +502,7 @@ impl Myapp {
                             log::error!("二维码登录失败: {}", err);
                         }
                         common::login::QrCodeLoginStatus::Expired => {
-                            log::warn!("二维码已过期，请刷新");
+                            log::warn!("二维码已过期, 请刷新");
                         }
                         _ => {}
                     }
@@ -511,7 +511,7 @@ impl Myapp {
                     // 处理短信登录结果
                     if sms_result.success {
                         self.sms_captcha_key = sms_result.message.clone();
-                        log::debug!("发送captchakey：{}", sms_result.message);
+                        log::debug!("发送captchakey: {}", sms_result.message);
                         log::info!("短信发送成功 ");
                     } else {
                         log::error!("短信发送失败: {}", sms_result.message);
@@ -566,7 +566,7 @@ impl Myapp {
                             bilibili_ticket.project_info = Some(project_info.clone());
                             log::debug!("获取project信息成功: {:?}", project_info);
                         } else {
-                            log::error!("未找到账号ID为 {} 的抢票对象，可能已被移除", uid);
+                            log::error!("未找到账号ID为 {} 的抢票对象, 可能已被移除", uid);
                             self.show_screen_info = None;
                             continue;
                         }
@@ -598,7 +598,7 @@ impl Myapp {
                             bilibili_ticket.all_buyer_info = Some(buyer_info.clone());
                             log::debug!("获取购票人信息成功: {:?}", buyer_info);
                         } else {
-                            log::error!("未找到账号ID为 {} 的抢票对象，可能已被移除", uid);
+                            log::error!("未找到账号ID为 {} 的抢票对象, 可能已被移除", uid);
                             self.show_screen_info = None;
                             continue;
                         }
@@ -637,7 +637,7 @@ impl Myapp {
                         ));
                         let title = format!("恭喜{}抢票成功！", confirm_result.project_name);
                         let message = format!(
-                            "抢票成功！\n项目：{}\n场次：{}\n票类型：{}\n支付链接：{}\n请尽快支付{}元，以免支付超时导致票丢失\n如果觉得本项目好用，可前往https://github.com/biliticket/bili_ticket_rush 帮我们点个小星星star收藏本项目以防走丢\n本项目完全免费开源，仅供学习使用，开发组不承担使用本软件造成的一切后果",
+                            "抢票成功！\n项目: {}\n场次: {}\n票类型: {}\n支付链接: {}\n请尽快支付{}元, 以免支付超时导致票丢失\n如果觉得本项目好用, 可前往https://github.com/biliticket/bili_ticket_rush 帮我们点个小星星star收藏本项目以防走丢\n本项目完全免费开源, 仅供学习使用, 开发组不承担使用本软件造成的一切后果",
                             confirm_result.project_name,
                             confirm_result.screen_name,
                             confirm_result.ticket_info.name,
@@ -657,7 +657,7 @@ impl Myapp {
                             });
                             match self.task_manager.submit_task(push_request) {
                                 Ok(task_id) => {
-                                    log::debug!("提交全渠道推送任务成功，任务ID: {}", task_id);
+                                    log::debug!("提交全渠道推送任务成功, 任务ID: {}", task_id);
                                 }
                                 Err(e) => {
                                     log::error!("提交推送任务失败: {}", e);
@@ -682,7 +682,7 @@ impl Myapp {
             }
         }
 
-        // 一次性添加所有日志，避免借用冲突
+        // 一次性添加所有日志, 避免借用冲突
         for message in pending_logs {
             self.add_log(&message);
         }
@@ -702,7 +702,7 @@ impl Myapp {
             // 检查是否有公告信息
             if let Some(announcement) = policy.get("announcement1").and_then(|v| v.as_str()) {
                 log::info!("公告: {}", announcement);
-                // 可选：显示公告横幅
+                // 可选: 显示公告横幅
                 self.success_banner_active = true;
                 self.success_banner_text = format!("公告: {}", announcement);
                 self.success_banner_start_time = Some(std::time::Instant::now());
@@ -731,10 +731,10 @@ impl Myapp {
                 if let Some(accouncement) = self.announce4.clone() {
                     log::error!("公告: {}", accouncement);
                 }
-                log::error!("根据策略配置，当前版本不允许运行");
+                log::error!("根据策略配置, 当前版本不允许运行");
                 // 显示错误横幅
                 self.error_banner_active = true;
-                self.error_banner_text = "根据策略配置，当前版本不允许运行".to_string();
+                self.error_banner_text = "根据策略配置, 当前版本不允许运行".to_string();
                 self.error_banner_start_time = Some(std::time::Instant::now());
                 self.error_banner_opacity = 1.0;
 
@@ -744,23 +744,23 @@ impl Myapp {
     }
 
     pub fn handle_login_success(&mut self, cookie: &str) {
-        log::debug!("登录成功，cookie: {}", cookie);
+        log::debug!("登录成功, cookie: {}", cookie);
         match add_account(cookie, &self.client, &self.default_ua) {
             Ok(account) => {
                 self.account_manager.accounts.push(account.clone());
                 match save_config(&mut self.config, None, None, Some(account.clone())) {
                     Ok(_) => {
-                        log::info!("登录成功，账号已添加");
+                        log::info!("登录成功, 账号已添加");
                         self.show_login_windows = false;
                     }
                     Err(e) => {
-                        log::error!("登录成功，但保存账号失败: {}", e);
+                        log::error!("登录成功, 但保存账号失败: {}", e);
                     }
                 }
-                log::info!("登录成功，账号已添加");
+                log::info!("登录成功, 账号已添加");
             }
             Err(e) => {
-                log::error!("登录成功，但添加账号失败: {}", e);
+                log::error!("登录成功, 但添加账号失败: {}", e);
             }
         }
     }
@@ -813,7 +813,7 @@ impl eframe::App for Myapp {
         }
 
         //检查policy
-        if self.policy.is_none() {
+        /*if self.policy.is_none() {
             let rt = Runtime::new().unwrap();
             rt.block_on(async {
                 let policy = self.get_policy().await;
@@ -861,7 +861,7 @@ impl eframe::App for Myapp {
                        })
             */
         }
-
+        */
         //从env_log添加日志进窗口
         self.add_log_windows();
 
@@ -871,9 +871,9 @@ impl eframe::App for Myapp {
             if let Some(start_time) = self.error_banner_start_time {
                 let elapsed = start_time.elapsed().as_secs_f32();
 
-                // 横幅在屏幕上停留2秒，然后在0.5秒内淡出
+                // 横幅在屏幕上停留2秒, 然后在0.5秒内淡出
                 if elapsed < 4.5 {
-                    // 如果超过2秒，开始淡出
+                    // 如果超过2秒, 开始淡出
                     if elapsed > 4.0 {
                         self.error_banner_opacity = 1.0 - (elapsed - 2.0) * 2.0; // 0.5秒内从1.0淡到0
                     }
@@ -884,7 +884,7 @@ impl eframe::App for Myapp {
                     // 持续重绘以实现动画效果
                     ctx.request_repaint();
                 } else {
-                    // 超过2.5秒，停用横幅
+                    // 超过2.5秒, 停用横幅
                     self.error_banner_active = false;
                     self.error_banner_start_time = None;
                 }
@@ -896,9 +896,9 @@ impl eframe::App for Myapp {
             if let Some(start_time) = self.success_banner_start_time {
                 let elapsed = start_time.elapsed().as_secs_f32();
 
-                // 横幅在屏幕上停留3秒，然后在1秒内淡出
+                // 横幅在屏幕上停留3秒, 然后在1秒内淡出
                 if elapsed < 4.0 {
-                    // 如果超过3秒，开始淡出
+                    // 如果超过3秒, 开始淡出
                     if elapsed > 3.0 {
                         self.success_banner_opacity = (1.0 - (elapsed - 3.0) / 1.0).max(0.0);
                     }
@@ -908,7 +908,7 @@ impl eframe::App for Myapp {
                     // 持续重绘以实现动画效果
                     ctx.request_repaint();
                 } else {
-                    // 超过4秒，停用横幅
+                    // 超过4秒, 停用横幅
                     self.success_banner_active = false;
                     self.success_banner_start_time = None;
                 }
@@ -932,13 +932,13 @@ impl eframe::App for Myapp {
                 self.account_manager.accounts.push(account.clone());
                 match save_config(&mut self.config, None, None, Some(account.clone())) {
                     Ok(_) => {
-                        log::info!("cookie登录成功，账号已添加");
+                        log::info!("cookie登录成功, 账号已添加");
                     }
                     Err(e) => {
-                        log::error!("cookie登录成功，但保存账号失败: {}", e);
+                        log::error!("cookie登录成功, 但保存账号失败: {}", e);
                     }
                 }
-                log::info!("cookie登录成功，账号已添加");
+                log::info!("cookie登录成功, 账号已添加");
                 self.cookie_login = None; // 清空cookie
             } else {
                 log::error!("cookie登录失败");
@@ -997,7 +997,7 @@ impl eframe::App for Myapp {
                 } else {
                     if self.total_order_data.as_ref().unwrap().account_id == uid.clone() {
                     } else {
-                        log::error!("账号不匹配，正在重新加载");
+                        log::error!("账号不匹配, 正在重新加载");
                         self.orderlist_need_reload = true;
                     }
                 }
@@ -1007,7 +1007,7 @@ impl eframe::App for Myapp {
                     && !self.orderlist_requesting
                     && match self.orderlist_last_request_time {
                         Some(last_time) => last_time.elapsed() > std::time::Duration::from_secs(5), // 5秒冷却时间
-                        None => true, // 从未请求过，允许请求
+                        None => true, // 从未请求过, 允许请求
                     };
                 if should_request {
                     log::debug!("提交订单请求 (冷却期已过)");
@@ -1055,7 +1055,7 @@ impl eframe::App for Myapp {
                         });
                         match self.task_manager.submit_task(request) {
                             Ok(task_id) => {
-                                log::info!("提交获取project请求，任务ID: {}", task_id);
+                                log::info!("提交获取project请求, 任务ID: {}", task_id);
                                 self.is_loading = true;
                                 self.ticket_info_last_request_time =
                                     Some(std::time::Instant::now());
@@ -1070,7 +1070,7 @@ impl eframe::App for Myapp {
                     windows::screen_info::show(self, ctx, account_id);
                 }
             } else {
-                log::error!("未找到账号ID为 {} 的抢票对象，可能已被移除", account_id);
+                log::error!("未找到账号ID为 {} 的抢票对象, 可能已被移除", account_id);
                 self.show_screen_info = None;
             }
         }
@@ -1080,7 +1080,7 @@ impl eframe::App for Myapp {
             let confirm_uid = match self.confirm_ticket_info.clone() {
                 Some(uid) => uid.parse::<i64>().unwrap_or(0),
                 None => {
-                    log::error!("确认信息窗口未找到账号ID，可能已被移除");
+                    log::error!("确认信息窗口未找到账号ID, 可能已被移除");
                     self.show_screen_info = None;
                     return;
                 }
@@ -1101,7 +1101,7 @@ impl eframe::App for Myapp {
                     None => 0,
                 };
                 if bilibili_ticket.method == 2 {
-                    //如果是捡漏模式，直接请求购票人信息
+                    //如果是捡漏模式, 直接请求购票人信息
                     id_bind = 1;
                 }
                 if id_bind == 0 {
@@ -1119,7 +1119,7 @@ impl eframe::App for Myapp {
                         });
                         match self.task_manager.submit_task(request) {
                             Ok(task_id) => {
-                                log::info!("提交获取购票人信息请求，任务ID: {}", task_id);
+                                log::info!("提交获取购票人信息请求, 任务ID: {}", task_id);
                                 self.is_loading = true;
                                 self.ticket_info_last_request_time =
                                     Some(std::time::Instant::now());
@@ -1144,7 +1144,7 @@ impl eframe::App for Myapp {
                     }
                 }
             } else {
-                log::error!("未找到账号ID为 {} 的抢票对象，可能已被移除", confirm_uid);
+                log::error!("未找到账号ID为 {} 的抢票对象, 可能已被移除", confirm_uid);
                 self.show_screen_info = None;
             }
         }
@@ -1173,10 +1173,10 @@ pub fn submit_get_total_order(
 
     match task_manager.submit_task(request) {
         Ok(task_id) => {
-            log::info!("订单请求提交成功，任务ID: {}", task_id);
+            log::info!("订单请求提交成功, 任务ID: {}", task_id);
         }
         Err(e) => {
-            log::error!("查看全部订单请求提交失败：{}", e);
+            log::error!("查看全部订单请求提交失败: {}", e);
         }
     }
 }

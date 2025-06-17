@@ -58,7 +58,7 @@ pub fn show(app: &mut Myapp, ctx: &egui::Context) {
                                 ui.horizontal(|ui| {
                                     // 图片处理
                                     let image_size = egui::vec2(80.0, 80.0);
-                                    // 处理URL格式：如果以//开头，添加https:前缀
+                                    // 处理URL格式: 如果以//开头, 添加https:前缀
                                     let image_url = if order.img.url.starts_with("//") {
                                         format!("https:{}", order.img.url)
                                     } else {
@@ -157,7 +157,7 @@ pub fn show(app: &mut Myapp, ctx: &egui::Context) {
                                             };
                                             if !pay_channel.is_empty() {
                                                 ui.add_space(8.0);
-                                                ui.label(format!("(支付方式：{})", pay_channel));
+                                                ui.label(format!("(支付方式: {})", pay_channel));
                                             }
 
                                             // 操作按钮放在右侧
@@ -242,7 +242,7 @@ pub fn show(app: &mut Myapp, ctx: &egui::Context) {
     }
 }
 
-// 辅助函数：从缓存获取图片纹理
+// 辅助函数: 从缓存获取图片纹理
 fn get_image_texture(ctx: &egui::Context, url: &str) -> Option<TextureHandle> {
     ctx.memory(|mem| {
         // log::debug!("{:?}", mem.data);
@@ -250,7 +250,7 @@ fn get_image_texture(ctx: &egui::Context, url: &str) -> Option<TextureHandle> {
     })
 }
 
-// 辅助函数：异步请求图片
+// 辅助函数: 异步请求图片
 fn request_image_async(ctx: egui::Context, app: &Myapp, url: String) {
     if ctx.memory(|mem| {
         mem.data
@@ -289,7 +289,7 @@ fn request_image_async(ctx: egui::Context, app: &Myapp, url: String) {
     let _app_ua = app.default_ua.clone();
 
     // 这里应该实现实际的图片加载逻辑
-    // 示例：
+    // 示例:
     std::thread::spawn(move || {
         if let Some(texture) =
             load_texture_from_url(&ctx, app_client, &(url.clone() + "@74w_74h.jpeg"), &url)

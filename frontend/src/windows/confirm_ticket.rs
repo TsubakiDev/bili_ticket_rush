@@ -1,6 +1,6 @@
 use crate::app::Myapp;
 use common::cookie_manager::CookieManager;
-use common::taskmanager::{GrabTicketRequest, TaskRequest, TaskStatus};
+use common::task_manager::{GrabTicketRequest, TaskRequest, TaskStatus};
 use common::ticket::*;
 use eframe::egui;
 use egui::{Color32, RichText, Stroke, Vec2};
@@ -68,7 +68,7 @@ pub fn show(app: &mut Myapp, ctx: &egui::Context, uid: &i64) {
         let buyers_in = match &biliticket.all_buyer_info {
             Some(data) => &data.list,
             None => {
-                //log::error!("购票人列表未加载，请先获取购票人信息");
+                //log::error!("购票人列表未加载, 请先获取购票人信息");
                 &Vec::new() // 返回空列表
             }
         };
@@ -331,7 +331,7 @@ pub fn show(app: &mut Myapp, ctx: &egui::Context, uid: &i64) {
                                                         ui.horizontal(|ui| {
                                                             // 添加不同样式的选择按钮
                                                             let select_button = if is_multi_select {
-                                                                // 多选模式：显示复选框样式
+                                                                // 多选模式: 显示复选框样式
                                                                 if is_selected {
                                                                     ui.add(
                                                                         egui::Button::new("☑")
@@ -350,7 +350,7 @@ pub fn show(app: &mut Myapp, ctx: &egui::Context, uid: &i64) {
                                                                     )
                                                                 }
                                                             } else {
-                                                                // 单选模式：显示单选框样式
+                                                                // 单选模式: 显示单选框样式
                                                                 if is_selected {
                                                                     ui.add(
                                                                         egui::Button::new("✓")
@@ -373,7 +373,7 @@ pub fn show(app: &mut Myapp, ctx: &egui::Context, uid: &i64) {
                                                             // 处理选择按钮点击
                                                             if select_button.clicked() {
                                                                 if is_multi_select {
-                                                                    // 多选模式：切换选中状态
+                                                                    // 多选模式: 切换选中状态
                                                                     if app
                                                                         .selected_buyer_list
                                                                         .is_none()
@@ -387,7 +387,7 @@ pub fn show(app: &mut Myapp, ctx: &egui::Context, uid: &i64) {
                                                                         .as_mut()
                                                                         .unwrap();
 
-                                                                    // 如果已经选中，则移除；否则添加
+                                                                    // 如果已经选中, 则移除；否则添加
                                                                     if let Some(pos) =
                                                                         buyer_list.iter().position(
                                                                             |b| b.id == buyer.id,
@@ -407,14 +407,14 @@ pub fn show(app: &mut Myapp, ctx: &egui::Context, uid: &i64) {
                                                                         );
                                                                     }
                                                                 } else {
-                                                                    // 单选模式：替换当前选择的购票人
+                                                                    // 单选模式: 替换当前选择的购票人
                                                                     log::debug!(
                                                                         "选择购票人: {}",
                                                                         buyer.name
                                                                     );
                                                                     //app.selected_buyer_id = Some(buyer.id); // 保持单选ID兼容
                                                                     app.selected_buyer_list =
-                                                                        Some(vec![buyer.clone()]); // 使用List，但只有一个
+                                                                        Some(vec![buyer.clone()]); // 使用List, 但只有一个
                                                                     let biliticket = &mut app
                                                                         .bilibiliticket_list
                                                                         [biliticket_index];
@@ -475,7 +475,7 @@ pub fn show(app: &mut Myapp, ctx: &egui::Context, uid: &i64) {
                 }
                 _ => {
                     ui.add_space(10.0);
-                    ui.label("该项目不支持选择购票人（未知状态码），请尝试直接购票！");
+                    ui.label("该项目不支持选择购票人（未知状态码）, 请尝试直接购票！");
                 }
             }
 
@@ -503,7 +503,7 @@ pub fn show(app: &mut Myapp, ctx: &egui::Context, uid: &i64) {
                             .as_ref()
                             .map_or(false, |list| !list.is_empty()),
                         2 => {
-                            // 多选模式，需要确保选中的购票人数量与票数匹配
+                            // 多选模式, 需要确保选中的购票人数量与票数匹配
                             let ticket_count = app.bilibiliticket_list[biliticket_index]
                                 .clone()
                                 .count
@@ -562,7 +562,7 @@ pub fn show(app: &mut Myapp, ctx: &egui::Context, uid: &i64) {
                                             ) {
                                                 Ok(task_id) => {
                                                     log::info!(
-                                                        "提交抢票任务成功，任务ID: {}",
+                                                        "提交抢票任务成功, 任务ID: {}",
                                                         task_id
                                                     );
                                                     app.confirm_ticket_info = None;
@@ -580,7 +580,7 @@ pub fn show(app: &mut Myapp, ctx: &egui::Context, uid: &i64) {
                                     if !buyer_list.is_empty() {
                                         let ids: Vec<i64> =
                                             buyer_list.iter().map(|b| b.id).collect();
-                                        log::info!("确认购票，选择的购票人IDs: {:?}", ids);
+                                        log::info!("确认购票, 选择的购票人IDs: {:?}", ids);
 
                                         if let Some(screen) = screen_info_button {
                                             if let Some(ticket) = ticket_info {
@@ -619,7 +619,7 @@ pub fn show(app: &mut Myapp, ctx: &egui::Context, uid: &i64) {
                                                 ) {
                                                     Ok(task_id) => {
                                                         log::info!(
-                                                            "提交抢票任务成功，任务ID: {}",
+                                                            "提交抢票任务成功, 任务ID: {}",
                                                             task_id
                                                         );
                                                         app.confirm_ticket_info = None;
