@@ -3,9 +3,7 @@
 
 use eframe::epaint::Vec2;
 
-use crate::resources::ensure_resources;
 mod app;
-mod resources;
 mod ui;
 mod windows;
 
@@ -38,9 +36,6 @@ fn main() -> Result<(), eframe::Error> {
         std::thread::sleep(std::time::Duration::from_secs(5));
         std::process::exit(1);
     }
-
-    // 创建资源目录（如果不存在）
-    let _ = ensure_resources();
 
     let options = eframe::NativeOptions {
         initial_window_size: Some(Vec2::new(1200.0, 600.0)),

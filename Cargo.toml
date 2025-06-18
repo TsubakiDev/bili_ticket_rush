@@ -2,7 +2,8 @@
 members = [
     "frontend",
     "backend",
-    "common"
+    "common",
+    "cli"
 ]
 
 [patch.crates-io]

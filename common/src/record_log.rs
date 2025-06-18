@@ -21,7 +21,7 @@ fn create_log_file() -> Option<(String, File)> {
 
     // 创建带有时间戳的文件名
     let timestamp = chrono::Local::now().format("%Y%m%d_%H%M%S");
-    let filename = format!("Log/log_{}.log", timestamp);
+    let filename = format!("logs/log_{}.log", timestamp);
 
     // 打开文件
     match OpenOptions::new()

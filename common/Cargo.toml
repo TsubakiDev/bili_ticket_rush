@@ -49,3 +49,8 @@ fs2 = "0.4.3"  # 添加对fs2的依赖
 
 #Singleton
 single-instance = "0.3.3"
+
+tempfile = "3.20.0"
+include_dir = "0.7.4"
+anyhow = "1"
+fs_extra = "1"

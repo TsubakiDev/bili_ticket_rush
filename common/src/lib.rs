@@ -12,6 +12,7 @@ pub mod utils;
 
 pub mod cookie_manager;
 pub mod machine_id;
+pub mod resources;
 pub mod web_ck_obfuscated;
 // 重导出日志收集器
 pub use record_log::LOG_COLLECTOR;
