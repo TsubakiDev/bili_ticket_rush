@@ -13,7 +13,7 @@ lazy_static::lazy_static! {
 // 创建新的日志文件
 fn create_log_file() -> Option<(String, File)> {
     // 确保日志目录存在
-    let log_dir = Path::new("Log");
+    let log_dir = Path::new("log");
     if let Err(e) = fs::create_dir_all(log_dir) {
         eprintln!("无法创建日志目录: {}", e);
         return None;

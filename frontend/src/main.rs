@@ -6,6 +6,7 @@ use eframe::epaint::Vec2;
 mod app;
 mod ui;
 mod windows;
+mod resources;
 
 fn main() -> Result<(), eframe::Error> {
     unsafe { std::env::set_var("LIBGL_ALWAYS_SOFTWARE", "1") }; // 强制软件渲染
@@ -45,8 +46,10 @@ fn main() -> Result<(), eframe::Error> {
         ..Default::default()
     };
 
+    resources::ensure_resources().unwrap_err();
+
     eframe::run_native(
-        "Bilibili Ticker Rush",
+        "Bilibili Ticket Rush",
         options,
         Box::new(|cc| Box::new(app::Myapp::new(cc))),
     )
