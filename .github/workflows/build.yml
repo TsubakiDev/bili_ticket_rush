@@ -3,7 +3,7 @@ name: Build
 on:
   push:
     tags:
-      - 'v*'
+      - 'main'
   
   workflow_dispatch:
   
@@ -39,6 +39,9 @@ jobs:
         python-version: '3.13.5'
     - name: Run sccache-cache
       uses: mozilla-actions/sccache-action@v0.0.9
+    - uses: hecrj/setup-rust-action@v2
+      with:
+        rust-version: 'nightly'
     - name: Build Release
       if: matrix.debug == 'release'
       run: cargo build -Z build-std=std,panic_abort -Z build-std-features="optimize_for_size" --verbose --release
