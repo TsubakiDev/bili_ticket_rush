@@ -41,7 +41,7 @@ jobs:
       uses: mozilla-actions/sccache-action@v0.0.9
     - name: Build Release
       if: matrix.debug == 'release'
-      run: cargo build --verbose --release
+      run: cargo build -Z build-std=std,panic_abort -Z build-std-features="optimize_for_size" --verbose --release
     - name: Build Debug
       if: matrix.debug == 'debug'
       run: cargo build --verbose

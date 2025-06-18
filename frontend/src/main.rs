@@ -46,7 +46,7 @@ fn main() -> Result<(), eframe::Error> {
         ..Default::default()
     };
 
-    resources::ensure_resources().unwrap_err();
+    let _ = resources::ensure_resources();
 
     eframe::run_native(
         "Bilibili Ticket Rush",
