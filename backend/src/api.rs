@@ -448,7 +448,7 @@ pub async fn confirm_ticket_order(
         .as_secs() as u32;
 
     let url = format!(
-        "https://show.bilibili.com/api/ticket/order/confirmInfo?project_id={}&ptoken={}&requestSource=neul-next&show_cashier=1&timestamp={}&token={}",
+        "https://show.bilibili.com/api/ticket/order/confirmInfo?project_id={}&ptoken={}&voucher=&requestSource=neul-next&show_cashier=1&timestamp={}&token={}",
         project_id, ptoken, timestamp, token
     );
     let response = cookie_manager
@@ -538,6 +538,8 @@ pub async fn create_order(
     let count = confirm_result.count.clone();
     let pay_money = confirm_result.pay_money.clone();
 
+    let ctoken = get_ctoken().unwrap_or("".to_string());
+
     let ticket_id = match biliticket.select_ticket_id.clone() {
         Some(id) => id,
         None => return Err(999),
@@ -555,7 +557,7 @@ pub async fn create_order(
                 "sku_id": ticket_id_int,
                 "token": token,
                 "ptoken": ptoken,
-                "ctoken": get_ctoken().unwrap_or("".to_string()),
+                "ctoken": ctoken,
                 "buyer": no_bind_buyer_info.name,
                 "tel": no_bind_buyer_info.tel,
                 "clickPosition": click_position,
@@ -576,7 +578,7 @@ pub async fn create_order(
                 "sku_id": ticket_id_int,
                 "token": token,
                 "ptoken": ptoken,
-                "ctoken": get_ctoken().unwrap_or("".to_string()),
+                "ctoken": ctoken,
                 "buyer_info": serde_json::to_string(buyer_info).unwrap_or_default(),
                 "clickPosition": click_position,
                 "newRisk": true,

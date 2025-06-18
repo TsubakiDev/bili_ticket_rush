@@ -22,3 +22,9 @@ config
 /效果/
 permissions
 /resources/
+/httpx/
+/idna/
+/loguru/
+/qrcode/
+bilibili_util.cp313-win_amd64.pyd
+bilibili_util.cpython-313-darwin.so

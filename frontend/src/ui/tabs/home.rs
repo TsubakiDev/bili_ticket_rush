@@ -1,8 +1,7 @@
 use std::u32;
 
 use crate::app::Myapp;
-use common::account::Account;
-use common::task_manager::{TaskManager_debug, TaskStatus, TicketRequest};
+use common::task_manager::TaskManager_debug;
 use common::ticket::BilibiliTicket;
 use eframe::egui;
 use eframe::egui::Widget;
@@ -11,7 +10,11 @@ pub fn render(app: &mut Myapp, ui: &mut egui::Ui) {
     //页面标题
     ui.vertical_centered(|ui| {
         ui.add_space(20.0);
-        ui.heading(egui::RichText::new("仅供学习的小工具").size(32.0).strong());
+        ui.heading(
+            egui::RichText::new("Bilibili Ticket Rush")
+                .size(32.0)
+                .strong(),
+        );
         ui.add_space(10.0);
         ui.label(
             egui::RichText::new(TaskManager_debug())
@@ -26,15 +29,6 @@ pub fn render(app: &mut Myapp, ui: &mut egui::Ui) {
                 .color(egui::Color32::GRAY),
         );
         ui.add_space(10.0);
-        if let Some(accounce) = app.announce1.clone() {
-            ui.label(
-                egui::RichText::new(accounce)
-                    .size(14.0)
-                    .color(egui::Color32::from_rgb(255, 120, 50))
-                    .strong(),
-            );
-        }
-        ui.add_space(25.0);
 
         //输入区域
         ticket_input_area(ui, app);
@@ -47,7 +41,7 @@ fn ticket_input_area(ui: &mut egui::Ui, app: &mut Myapp) {
         ui.spacing_mut().item_spacing = egui::vec2(0.0, 20.0);
 
         //输入框布局
-        let response = styled_ticket_input(ui, &mut app.ticket_id);
+        let _response = styled_ticket_input(ui, &mut app.ticket_id);
 
         // 新增: 账号和抢票模式选择区域
         ui.add_space(15.0);
@@ -102,11 +96,6 @@ fn ticket_input_area(ui: &mut egui::Ui, app: &mut Myapp) {
 
         //底部状态文本
         ui.add_space(30.0);
-        /*  let status_text = match app.is_loading {
-            true => egui::RichText::new(&app.running_status).color(egui::Color32::from_rgb(255, 165, 0)),
-            false => egui::RichText::new("等待开始...").color(egui::Color32::GRAY),
-        };
-        ui.label(status_text); */
     });
 }
 

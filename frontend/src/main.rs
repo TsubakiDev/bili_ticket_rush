@@ -51,7 +51,7 @@ fn main() -> Result<(), eframe::Error> {
     };
 
     eframe::run_native(
-        "iililililililililiilililililliilililil",
+        "Bilibili Ticker Rush",
         options,
         Box::new(|cc| Box::new(app::Myapp::new(cc))),
     )

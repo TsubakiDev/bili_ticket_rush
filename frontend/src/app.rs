@@ -1,14 +1,7 @@
 use eframe::egui;
-use jsonwebtoken::{Algorithm, DecodingKey, Validation, decode};
 use reqwest::{Client, header};
-use serde::{Deserialize, Serialize};
-use serde_json::{Value, json};
 use std::collections::HashMap;
-use std::fs::File;
-use std::io::{Read, Write};
 use std::sync::Arc;
-use std::time::{SystemTime, UNIX_EPOCH};
-use tokio::runtime::Runtime;
 
 use crate::ui;
 use crate::ui::error_banner::render_error_banner;
@@ -34,9 +27,6 @@ use backend::task_manager::TaskManagerImpl;
 
 //UI
 pub struct Myapp {
-    pub app: String,
-    pub version: String,
-    pub policy: Option<Value>,
     //ui
     pub left_panel_width: f32, //左面板宽度
     pub selected_tab: usize,   //左侧已选中标签
@@ -45,8 +35,6 @@ pub struct Myapp {
     pub is_loading: bool,
     //运行状态（显示用）
     pub running_status: String,
-    //自定义背景图  （未启用, 效果不好, 预留暂时不用）
-    pub background_texture: Option<egui::TextureHandle>,
     //日志记录
     pub logs: Vec<String>,
     pub show_log_window: bool,
@@ -159,14 +147,6 @@ pub struct Myapp {
 
     pub show_qr_windows: Option<String>, //扫码支付窗口  (传二维码数据)
 
-    pub machine_id: String,
-
-    pub announce1: Option<String>, //主公告
-    pub announce2: Option<String>,
-    pub announce3: Option<String>, //监视公告
-    pub announce4: Option<String>, //退出公告
-
-    pub public_key: String,
     pub skip_words: Option<Vec<String>>,
     pub skip_words_input: String,
 }
@@ -237,17 +217,10 @@ impl Myapp {
         };
 
         let mut app = Self {
-            app: String::from("BRT"),
-            version: String::from("6.4.0"),
-            policy: None,
-            public_key: String::from(
-                "-----BEGIN PUBLIC KEY-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEApTAS0RElXIs4Kr0bO4n8\nJB+eBFF/TwXUlvtOM9FNgHjK8m13EdwXaLy9zjGTSQr8tshSRr0dQ6iaCG19Zo2Y\nXfvJrwQLqdezMN+ayMKFy58/S9EGG3Np2eGgKHUPnCOAlRicqWvBdQ/cxzTDNCxa\nORMZdJRoBvya7JijLLIC3CoqmMc6Fxe5i8eIP0zwlyZ0L0C1PQ82BcWn58y7tlPY\nTCz12cWnuKwiQ9LSOfJ4odJJQK0k7rXxwBBsYxULRno0CJ3rKfApssW4cfITYVax\nFtdbu0IUsgEeXs3EzNw8yIYnsaoZlFwLS8SMVsiAFOy2y14lR9043PYAQHm1Cjaf\noQIDAQAB\n-----END PUBLIC KEY-----",
-            ),
             left_panel_width: 250.0,
             selected_tab: 0,
             is_loading: false,
             loading_angle: 0.0,
-            background_texture: None,
             show_log_window: false,
             show_login_windows: false,
             logs: Vec::new(),
@@ -340,20 +313,13 @@ impl Myapp {
             selected_buyer_list: None,
             local_captcha: LocalCaptcha::new(),
             show_qr_windows: None,
-            announce1: None,
-            announce2: None,
-            announce3: None,
-            announce4: None,
-            machine_id: common::machine_id::get_machine_id_ob(),
             skip_words: None,
             skip_words_input: String::from(""),
         };
         // 初始化每个账号的 client
         for account in &mut app.account_manager.accounts {
             account.ensure_client();
-
             log::debug!("为账号 {} 初始化了专属客户端", account.name);
-            log::debug!("machine_id: {}", app.machine_id);
         }
 
         //初始化client和ua
@@ -405,77 +371,6 @@ impl Myapp {
         // 普通消息不显示横幅
     }
 
-    async fn get_policy(&mut self) -> Value {
-        // 获取当前时间戳
-        let timestamp = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .unwrap_or_default()
-            .as_secs();
-
-        // 构建请求数据
-        let data = json!({
-            "ts": timestamp,
-            "machine_id": self.machine_id.clone(),
-        });
-
-        let url = format!(
-            "https://policy.rakuyoudesu.com/api/client/{}/{}/dispatch.json",
-            self.app, self.version
-        );
-
-        match self.client.post(&url).json(&data).send().await {
-            Ok(response) => match response.json::<Value>().await {
-                Ok(resp) => {
-                    if let Some(code) = resp["code"].as_i64() {
-                        if code != 0 {
-                            log::error!("获取策略失败: {}", resp["message"]);
-                            return json!({"allow_run": true});
-                        }
-
-                        match decode_policy(
-                            &resp["data"]["data"].as_str().unwrap_or(""),
-                            &self.public_key,
-                        ) {
-                            Ok(policy) => {
-                                if let Some(permission_token) = resp["data"]["permission"].as_str()
-                                {
-                                    match decode_permissions(permission_token, &self.public_key) {
-                                        Ok(permissions) => {
-                                            if let Ok(mut file) = File::create("permissions") {
-                                                let _ = file.write_all(permission_token.as_bytes());
-                                            }
-                                            self.policy = Some(permissions);
-                                        }
-                                        Err(e) => {
-                                            log::error!("权限签名无效: {}", e);
-                                            self.policy = Some(load_local_permissions(
-                                                self.public_key.clone().as_str(),
-                                            ));
-                                        }
-                                    }
-                                }
-                                return policy;
-                            }
-                            Err(e) => {
-                                log::error!("策略签名无效: {}", e);
-                                return json!({"allow_run": false});
-                            }
-                        }
-                    }
-                }
-                Err(e) => {
-                    log::error!("解析响应失败: {}", e);
-                    return json!({"allow_run": false});
-                }
-            },
-            Err(e) => {
-                log::error!("请求策略失败: {}", e);
-            }
-        }
-
-        json!({"allow_run": true})
-    }
-
     // 处理任务结果的方法
     fn process_task_results(&mut self) {
         // 获取所有可用结果
@@ -491,7 +386,7 @@ impl Myapp {
                 TaskResult::QrCodeLoginResult(qrcode_result) => {
                     // 二维码登录的处理逻辑
                     match qrcode_result.status {
-                        common::login::QrCodeLoginStatus::Success(cookie) => {
+                        common::login::QrCodeLoginStatus::Success(_) => {
                             log::info!("二维码登录成功!");
 
                             if let Some(cookie_str) = qrcode_result.cookie {
@@ -637,7 +532,7 @@ impl Myapp {
                         ));
                         let title = format!("恭喜{}抢票成功！", confirm_result.project_name);
                         let message = format!(
-                            "抢票成功！\n项目: {}\n场次: {}\n票类型: {}\n支付链接: {}\n请尽快支付{}元, 以免支付超时导致票丢失\n如果觉得本项目好用, 可前往https://github.com/biliticket/bili_ticket_rush 帮我们点个小星星star收藏本项目以防走丢\n本项目完全免费开源, 仅供学习使用, 开发组不承担使用本软件造成的一切后果",
+                            "抢票成功！\n项目: {}\n场次: {}\n票类型: {}\n支付链接: {}\n请尽快支付{}元, 以免支付超时导致票丢失",
                             confirm_result.project_name,
                             confirm_result.screen_name,
                             confirm_result.ticket_info.name,
@@ -697,52 +592,6 @@ impl Myapp {
         }
     }
 
-    fn check_policy(&mut self) {
-        if let Some(policy) = &self.policy {
-            // 检查是否有公告信息
-            if let Some(announcement) = policy.get("announcement1").and_then(|v| v.as_str()) {
-                log::info!("公告: {}", announcement);
-                // 可选: 显示公告横幅
-                self.success_banner_active = true;
-                self.success_banner_text = format!("公告: {}", announcement);
-                self.success_banner_start_time = Some(std::time::Instant::now());
-                self.success_banner_opacity = 1.0;
-                self.announce1 = Some(announcement.to_string());
-            }
-
-            if let Some(announcement) = policy.get("announcement2").and_then(|v| v.as_str()) {
-                self.announce2 = Some(announcement.to_string());
-            }
-
-            if let Some(announcement) = policy.get("announcement3").and_then(|v| v.as_str()) {
-                self.announce3 = Some(announcement.to_string());
-            }
-
-            if let Some(announcement) = policy.get("announcement4").and_then(|v| v.as_str()) {
-                self.announce4 = Some(announcement.to_string());
-            }
-
-            // 检查是否允许运行
-            let allow_run = policy
-                .get("allow_run")
-                .and_then(|v| v.as_bool())
-                .unwrap_or(false);
-            if !allow_run {
-                if let Some(accouncement) = self.announce4.clone() {
-                    log::error!("公告: {}", accouncement);
-                }
-                log::error!("根据策略配置, 当前版本不允许运行");
-                // 显示错误横幅
-                self.error_banner_active = true;
-                self.error_banner_text = "根据策略配置, 当前版本不允许运行".to_string();
-                self.error_banner_start_time = Some(std::time::Instant::now());
-                self.error_banner_opacity = 1.0;
-
-                std::process::exit(1);
-            }
-        }
-    }
-
     pub fn handle_login_success(&mut self, cookie: &str) {
         log::debug!("登录成功, cookie: {}", cookie);
         match add_account(cookie, &self.client, &self.default_ua) {
@@ -767,7 +616,7 @@ impl Myapp {
 }
 
 impl eframe::App for Myapp {
-    fn update(&mut self, ctx: &egui::Context, frame: &mut eframe::Frame) {
+    fn update(&mut self, ctx: &egui::Context, _: &mut eframe::Frame) {
         //侧栏
         ui::sidebar::render_sidebar(self, ctx);
 
@@ -812,56 +661,6 @@ impl eframe::App for Myapp {
             }
         }
 
-        //检查policy
-        /*if self.policy.is_none() {
-            let rt = Runtime::new().unwrap();
-            rt.block_on(async {
-                let policy = self.get_policy().await;
-                self.policy = Some(policy);
-                self.check_policy();
-            });
-            /*  let url = format!("https://policy.rakuyoudesu.com/api/client/{}/{}/dispatch.json",self.app,self.version);
-                       let rt= Runtime::new().unwrap();
-                       let timestamp = rt.block_on(get_now_time(&self.client));
-                       let data = serde_json::json!({
-                           "ts": timestamp,
-                           "machine_id": self.machine_id,
-                       });
-
-                       rt.block_on(async{
-                           match self.client.post(&url)
-                   .json(&data)
-                   .send()
-                   .await {
-                       Ok(response) => {
-                           match response.text().await {
-                               Ok(text) => {
-                                   match serde_json::from_str::<Value>(&text) {
-                                       Ok(json) => {
-                                           log::debug!("获取policy成功: {}", json);
-                                           self.policy = Some(json);
-                                       },
-                                       Err(e) => {
-                                           log::error!("解析policy响应失败: {}", e);
-                                       }
-                                   }
-                               },
-                               Err(e) => {
-                                   log::error!("获取policy响应文本失败: {}", e);
-                               }
-                           }
-                       },
-                       Err(e) => {
-                           log::error!("请求policy失败: {}", e);
-                       }
-                   }
-
-
-
-                       })
-            */
-        }
-        */
         //从env_log添加日志进窗口
         self.add_log_windows();
 
@@ -1024,13 +823,6 @@ impl eframe::App for Myapp {
         //开启场次窗口
         if self.show_screen_info.is_some() {
             let account_id = self.show_screen_info.clone().unwrap();
-            /* log::debug!("账号id:{}", account_id);
-
-
-            log::debug!("当前列表长度: {}", self.bilibiliticket_list.len());
-            for (i, ticket) in self.bilibiliticket_list.iter().enumerate() {
-                log::debug!("列表项 #{}: uid={}", i, ticket.uid);
-            } */
 
             if let Some(bilibili_ticket) = self
                 .bilibiliticket_list
@@ -1201,65 +993,6 @@ pub fn create_client(user_agent: String) -> Client {
         .unwrap_or_default()
 }
 
-#[derive(Debug, Serialize, Deserialize)]
-struct PolicyPayload {
-    policy: Value,
-}
-
-#[derive(Debug, Serialize, Deserialize)]
-struct PermissionsPayload {
-    permissions: Value,
-}
-
-// 解码策略JWT令牌
-fn decode_policy(token: &str, public_key: &str) -> Result<Value, String> {
-    let decoding_key = match DecodingKey::from_rsa_pem(public_key.as_bytes()) {
-        Ok(key) => key,
-        Err(e) => return Err(format!("无效的公钥: {}", e)),
-    };
-
-    let mut validation = Validation::new(Algorithm::RS256);
-    validation.validate_exp = false;
-    validation.required_spec_claims.clear();
-
-    match decode::<PolicyPayload>(token, &decoding_key, &validation) {
-        Ok(token_data) => Ok(token_data.claims.policy),
-        Err(e) => Err(format!("解码JWT失败: {}", e)),
-    }
-}
-
-// 解码权限JWT令牌
-fn decode_permissions(token: &str, public_key: &str) -> Result<Value, String> {
-    let decoding_key = match DecodingKey::from_rsa_pem(public_key.as_bytes()) {
-        Ok(key) => key,
-        Err(e) => return Err(format!("无效的公钥: {}", e)),
-    };
-
-    let mut validation = Validation::new(Algorithm::RS256);
-    validation.validate_exp = false;
-    validation.required_spec_claims.clear();
-
-    match decode::<PermissionsPayload>(token, &decoding_key, &validation) {
-        Ok(token_data) => Ok(token_data.claims.permissions),
-        Err(e) => Err(format!("解码JWT失败: {}", e)),
-    }
-}
-
-// 加载本地保存的权限
-fn load_local_permissions(public_key: &str) -> Value {
-    match File::open("permissions") {
-        Ok(mut file) => {
-            let mut contents = String::new();
-            if file.read_to_string(&mut contents).is_ok() {
-                if let Ok(decoded) = decode_permissions(&contents, &public_key) {
-                    return decoded;
-                }
-            }
-        }
-        Err(_) => {}
-    }
-    json!({})
-}
 fn generate_random_string(length: usize) -> String {
     use rand::distributions::Alphanumeric;
     use rand::{Rng, thread_rng};

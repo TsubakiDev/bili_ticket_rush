@@ -2,7 +2,7 @@ use crate::app::{AccountSwitch, Myapp};
 use common::utils::load_texture_from_url;
 use common::{
     account::{Account, signout_account},
-    cookie_manager::{self, CookieManager},
+    cookie_manager::CookieManager,
 };
 use eframe::egui;
 use std::sync::Arc;
