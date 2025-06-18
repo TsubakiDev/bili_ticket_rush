@@ -10,6 +10,7 @@ use block_modes::{BlockMode, Cbc};
 use serde_json::{Map, Value, json};
 use std::fs;
 use std::fs::File;
+use std::path::Path;
 use std::io;
 use std::io::Write;
 use std::ops::{Index, IndexMut};
