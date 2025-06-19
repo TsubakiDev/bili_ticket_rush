@@ -135,6 +135,13 @@ pub async fn get_project(
                         // 尝试常规解析
                         match serde_json::from_str::<InfoResponse>(&text) {
                             Ok(ticket_info) => {
+                                let json_value: serde_json::Value = serde_json::from_str(&text).unwrap_or_default();
+                                let is_hot_project = json_value["data"]["hotProject"].as_str().unwrap_or("false") == "true";
+
+                                if is_hot_project {
+                                    log::info!("hotProject = true")
+                                }
+
                                 return Ok(ticket_info);
                             }
                             Err(e) => {
@@ -299,6 +306,16 @@ pub async fn get_ticket_token(
                             0 => {
                                 let token = json["data"]["token"].as_str().unwrap_or("");
                                 let ptoken = json["data"]["ptoken"].as_str().unwrap_or("");
+
+                                if ptoken == "" {
+                                    log::info!("非 hotProject 项目");
+                                    return Ok(TokenSet {
+                                        token: token.to_string(),
+                                        ptoken: String::new(),
+                                        ctoken: get_ctoken().unwrap(),
+                                    });
+                                }
+
                                 let ctoken = get_ctoken().unwrap();
                                 return Ok(TokenSet {
                                     token: token.to_string(),
@@ -331,8 +348,6 @@ pub async fn get_ticket_token(
                                     .as_str()
                                     .unwrap_or("");
                                 let risk_param = json["data"]["ga_data"]["riskParams"].clone();
-                                let ptoken =
-                                    json["data"]["ptoken"].as_str().unwrap_or("").to_string();
                                 let token_risk_param = TokenRiskParam {
                                     code: code as i32,
 
@@ -344,8 +359,7 @@ pub async fn get_ticket_token(
                                     scene: Some(scene.to_string()),
                                     ua: Some(ua.to_string()),
                                     v_voucher: Some(v_voucher.to_string()),
-                                    risk_param: Some(risk_param.clone()),
-                                    ptoken: Some(ptoken.to_string()),
+                                    risk_param: Some(risk_param.clone())
                                 };
                                 log::debug!("{:?}", token_risk_param);
                                 return Err(token_risk_param);
@@ -368,8 +382,7 @@ pub async fn get_ticket_token(
                                     scene: None,
                                     ua: None,
                                     v_voucher: None,
-                                    risk_param: None,
-                                    ptoken: None,
+                                    risk_param: None
                                 });
                             }
                         }
@@ -388,8 +401,7 @@ pub async fn get_ticket_token(
                             scene: None,
                             ua: None,
                             v_voucher: None,
-                            risk_param: None,
-                            ptoken: None,
+                            risk_param: None
                         });
                     }
                 }
@@ -410,8 +422,7 @@ pub async fn get_ticket_token(
                     scene: None,
                     ua: None,
                     v_voucher: None,
-                    risk_param: None,
-                    ptoken: None,
+                    risk_param: None
                 });
             }
         }
@@ -429,8 +440,7 @@ pub async fn get_ticket_token(
                 scene: None,
                 ua: None,
                 v_voucher: None,
-                risk_param: None,
-                ptoken: None,
+                risk_param: None
             });
         }
     }
