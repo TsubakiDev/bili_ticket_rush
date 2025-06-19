@@ -33,10 +33,10 @@ jobs:
       CARGO_TERM_COLOR: always
     steps:
     - uses: actions/checkout@v4
-    - name: Setup python 313
+    - name: Setup python 312
       uses: actions/setup-python@v5
       with:
-        python-version: '3.13.5'
+        python-version: '3.12'
     - name: Run sccache-cache
       uses: mozilla-actions/sccache-action@v0.0.9
     - name: Build Release

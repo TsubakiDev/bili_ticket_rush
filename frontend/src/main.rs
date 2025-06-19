@@ -4,9 +4,9 @@
 use eframe::epaint::Vec2;
 
 mod app;
+mod resources;
 mod ui;
 mod windows;
-mod resources;
 
 fn main() -> Result<(), eframe::Error> {
     unsafe { std::env::set_var("LIBGL_ALWAYS_SOFTWARE", "1") }; // 强制软件渲染
