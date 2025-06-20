@@ -10,7 +10,7 @@ use crate::api::*;
 use crate::show_orderlist::get_orderlist;
 use common::captcha::handle_risk_verification;
 use common::login::{send_loginsms, sms_login};
-use common::task_manager::*;
+use common::{task_manager::*, ticket};
 use common::ticket::ConfirmTicketResult;
 use common::ticket::*;
 use tokio::runtime::Runtime;
@@ -458,7 +458,7 @@ async fn pickup_mode_grab(mut req: GrabTicketRequest, result_tx: mpsc::Sender<Ta
 
         req.biliticket.id_bind = project_data.data.id_bind.clone() as usize;
 
-        'screen_loop: for screen_data in project_data.data.screen_list {
+        'screen_loop: for screen_data in project_data.data.screen_list.iter() {
             if !screen_data.clickable {
                 continue;
             }
@@ -466,7 +466,7 @@ async fn pickup_mode_grab(mut req: GrabTicketRequest, result_tx: mpsc::Sender<Ta
             req.screen_id = screen_data.id.clone().to_string();
             req.biliticket.screen_id = screen_data.id.clone().to_string();
 
-            for ticket_data in screen_data.ticket_list {
+            for ticket_data in screen_data.ticket_list.iter() {
                 if !ticket_data.clickable {
                     continue;
                 }
@@ -484,6 +484,7 @@ async fn pickup_mode_grab(mut req: GrabTicketRequest, result_tx: mpsc::Sender<Ta
                     &req.screen_id,
                     &req.ticket_id,
                     req.count,
+                    project_data.data.is_hot_project,
                 )
                 .await
                 {
@@ -521,6 +522,7 @@ async fn grab_ticket_core(req: GrabTicketRequest, result_tx: mpsc::Sender<TaskRe
             &req.screen_id,
             &req.ticket_id,
             req.count,
+            req.biliticket.project_info.clone().unwrap().is_hot_project,
         )
         .await
         {

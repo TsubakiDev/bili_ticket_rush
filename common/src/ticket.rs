@@ -217,6 +217,8 @@ pub struct TicketInfo {
     pub is_free: bool,
     pub performance_desc: Option<DescribeList>, //基础信息
     pub id_bind: usize,                         //是否绑定
+    #[serde(rename = "hotProject")]
+    pub is_hot_project: bool, //是否热门项目
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]

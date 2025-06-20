@@ -78,7 +78,6 @@ pub struct GrabTicketRequest {
     pub grab_mode: u8,
     pub status: TaskStatus,
     pub start_time: Option<Instant>,
-
     pub local_captcha: LocalCaptcha,
     pub skip_words: Option<Vec<String>>,
 }

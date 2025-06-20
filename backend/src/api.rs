@@ -135,13 +135,6 @@ pub async fn get_project(
                         // 尝试常规解析
                         match serde_json::from_str::<InfoResponse>(&text) {
                             Ok(ticket_info) => {
-                                let json_value: serde_json::Value = serde_json::from_str(&text).unwrap_or_default();
-                                let is_hot_project = json_value["data"]["hotProject"].as_str().unwrap_or("false") == "true";
-
-                                if is_hot_project {
-                                    log::info!("hotProject = true")
-                                }
-
                                 return Ok(ticket_info);
                             }
                             Err(e) => {
@@ -264,17 +257,30 @@ pub async fn get_ticket_token(
     screen_id: &str,
     ticket_id: &str,
     count: i16,
+    is_hot_project: bool,
 ) -> Result<TokenSet, TokenRiskParam> {
-    let params = serde_json::json!({
-        "project_id": project_id,
-        "screen_id": screen_id,
-        "sku_id": ticket_id,
-        "count": count,
-        "order_type": 1,
-        "token": get_ctoken().unwrap(),
-        "requestSource": "neul-next",
-        "newRisk": "true",
-    });
+    let params = if is_hot_project {
+        json!({
+            "project_id": project_id,
+            "screen_id": screen_id,
+            "sku_id": ticket_id,
+            "count": count,
+            "order_type": 1,
+            "requestSource": "neul-next",
+            "newRisk": "true",
+        })
+    } else {
+       json!({
+            "project_id": project_id,
+            "screen_id": screen_id,
+            "sku_id": ticket_id,
+            "count": count,
+            "order_type": 1,
+            "token": get_ctoken().unwrap(),
+            "requestSource": "neul-next",
+            "newRisk": "true",
+        })
+    };
 
     let url = format!(
         "https://show.bilibili.com/api/ticket/order/prepare?project_id={}",
@@ -457,10 +463,18 @@ pub async fn confirm_ticket_order(
         .unwrap_or_default()
         .as_secs() as u32;
 
-    let url = format!(
-        "https://show.bilibili.com/api/ticket/order/confirmInfo?project_id={}&ptoken={}&voucher=&requestSource=neul-next&show_cashier=1&timestamp={}&token={}",
-        project_id, ptoken, timestamp, token
-    );
+    let url = if ptoken == "" {
+        format!(
+            "https://show.bilibili.com/api/ticket/order/confirmInfo?project_id={}&token={}&timestamp={}&show_cashier=1",
+            project_id, token, timestamp
+        )
+    } else {
+        format!(
+            "https://show.bilibili.com/api/ticket/order/confirmInfoInfo?project_id={}&ptoken={}&voucher=&requestSource=neul-next&show_cashier=1&timestamp={}&token={}",
+            project_id, ptoken, timestamp, token
+        )
+    };
+    
     let response = cookie_manager
         .get(&url)
         .await
@@ -556,49 +570,88 @@ pub async fn create_order(
     };
     let ticket_id_int = ticket_id.parse::<i64>().map_err(|_| 999)?;
 
+    let use_ctoken_ptoken = biliticket.project_info.clone().unwrap().is_hot_project;
+
     let data = match biliticket.id_bind {
         0 => {
             // 不实名制购票人信息
             let no_bind_buyer_info = biliticket.no_bind_buyer_info.clone().unwrap();
 
-            let data = json!({
-                "project_id": project_id.parse::<i64>().unwrap_or(0),
-                "screen_id": biliticket.screen_id.parse::<i64>().unwrap_or(0),
-                "sku_id": ticket_id_int,
-                "token": token,
-                "ptoken": ptoken,
-                "ctoken": ctoken,
-                "buyer": no_bind_buyer_info.name,
-                "tel": no_bind_buyer_info.tel,
-                "clickPosition": click_position,
-                "newRisk": true,
-                "requestSource": if is_mobile { "neul-next" } else { "pc-new" },
-                "deviceId": cookie_manager.get_cookie("deviceFingerprint"),
-                "pay_money": pay_money,
-                "count": count,
-                "timestamp": timestamp,
-                "order_type": 1,
-            });
+            let data = if use_ctoken_ptoken {
+                json!({
+                    "project_id": project_id.parse::<i64>().unwrap_or(0),
+                    "screen_id": biliticket.screen_id.parse::<i64>().unwrap_or(0),
+                    "sku_id": ticket_id_int,
+                    "token": token,
+                    "ptoken": ptoken,
+                    "ctoken": ctoken,
+                    "buyer": no_bind_buyer_info.name,
+                    "tel": no_bind_buyer_info.tel,
+                    "clickPosition": click_position,
+                    "newRisk": true,
+                    "requestSource": if is_mobile { "neul-next" } else { "pc-new" },
+                    "deviceId": cookie_manager.get_cookie("deviceFingerprint"),
+                    "pay_money": pay_money,
+                    "count": count,
+                    "timestamp": timestamp,
+                    "order_type": 1,
+                })
+            } else {
+                json!({
+                    "project_id": project_id.parse::<i64>().unwrap_or(0),
+                    "screen_id": biliticket.screen_id.parse::<i64>().unwrap_or(0),
+                    "sku_id": ticket_id_int,
+                    "token": token,
+                    "buyer": no_bind_buyer_info.name,
+                    "tel": no_bind_buyer_info.tel,
+                    "clickPosition": click_position,
+                    "newRisk": true,
+                    "requestSource": if is_mobile { "neul-next" } else { "pc-new" },
+                    "deviceId": cookie_manager.get_cookie("deviceFingerprint"),
+                    "pay_money": pay_money,
+                    "count": count,
+                    "timestamp": timestamp,
+                    "order_type": 1,
+                })
+            };
             data
         }
         1 | 2 => {
-            let data = json!({
-                "project_id": project_id.parse::<i64>().unwrap_or(0),
-                "screen_id": biliticket.screen_id.parse::<i64>().unwrap_or(0),
-                "sku_id": ticket_id_int,
-                "token": token,
-                "ptoken": ptoken,
-                "ctoken": ctoken,
-                "buyer_info": serde_json::to_string(buyer_info).unwrap_or_default(),
-                "clickPosition": click_position,
-                "newRisk": true,
-                "requestSource": if is_mobile { "neul-next" } else { "pc-new" },
-                "deviceId": cookie_manager.get_cookie("deviceFingerprint"),
-                "pay_money": pay_money,
-                "count": count,
-                "timestamp": timestamp,
-                "order_type": 1,
-            });
+            let data = if use_ctoken_ptoken {
+                json!({
+                    "project_id": project_id.parse::<i64>().unwrap_or(0),
+                    "screen_id": biliticket.screen_id.parse::<i64>().unwrap_or(0),
+                    "sku_id": ticket_id_int,
+                    "token": token,
+                    "ptoken": ptoken,
+                    "ctoken": ctoken,
+                    "buyer_info": serde_json::to_string(buyer_info).unwrap_or_default(),
+                    "clickPosition": click_position,
+                    "newRisk": true,
+                    "requestSource": if is_mobile { "neul-next" } else { "pc-new" },
+                    "deviceId": cookie_manager.get_cookie("deviceFingerprint"),
+                    "pay_money": pay_money,
+                    "count": count,
+                    "timestamp": timestamp,
+                    "order_type": 1,
+                })
+            } else {
+                json!({
+                    "project_id": project_id.parse::<i64>().unwrap_or(0),
+                    "screen_id": biliticket.screen_id.parse::<i64>().unwrap_or(0),
+                    "sku_id": ticket_id_int,
+                    "token": token,
+                    "buyer_info": serde_json::to_string(buyer_info).unwrap_or_default(),
+                    "clickPosition": click_position,
+                    "newRisk": true,
+                    "requestSource": if is_mobile { "neul-next" } else { "pc-new" },
+                    "deviceId": cookie_manager.get_cookie("deviceFingerprint"),
+                    "pay_money": pay_money,
+                    "count": count,
+                    "timestamp": timestamp,
+                    "order_type": 1,
+                })
+            };
             data
         }
         _ => {
