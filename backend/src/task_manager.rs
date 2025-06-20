@@ -12,7 +12,7 @@ use common::captcha::handle_risk_verification;
 use common::login::{send_loginsms, sms_login};
 use common::ticket::ConfirmTicketResult;
 use common::ticket::*;
-use common::{task_manager::*, ticket};
+use common::task_manager::*;
 use tokio::runtime::Runtime;
 use tokio::sync::mpsc;
 
@@ -807,6 +807,9 @@ async fn await_countdown(mut countdown: f32) {
         countdown -= 1.0;
         tokio::time::sleep(Duration::from_secs(1)).await;
     }
+
+    // 新增的0.5秒等待
+    tokio::time::sleep(Duration::from_secs_f32(0.5)).await;
 }
 
 fn should_skip_ticket(ticket_data: &ScreenTicketInfo, skip_words: &Option<Vec<String>>) -> bool {
