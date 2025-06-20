@@ -992,15 +992,26 @@ async fn try_create_order(
                 // 处理错误情况
                 match e {
                     //需要继续重试的临时错误
-                    100001 | 429 | 900001 => log::info!("b站限速, 正常现象"),
+                    100001 | 429  => log::info!("b站限速"),
+                    900001 => {
+                        log::info!("订单校验盾限制/提前下单惩罚");
+                        tokio::time::sleep(tokio::time::Duration::from_secs_f32(0.6)).await;
+                    }
+                    900002 => {
+                        log::info!("订单校验盾流量控制");
+                        tokio::time::sleep(tokio::time::Duration::from_secs_f32(0.6)).await;
+                    }
+                    100041 => {
+                        log::info!("提前下单, 开票后触发5分钟 900001 处罚");
+                        tokio::time::sleep(tokio::time::Duration::from_secs_f32(0.6)).await;
+                        return Some((true, false));
+                    }
                     100009 => {
                         log::info!("当前票种库存不足");
-                        //再次降速, 不给b站服务器带来压力
                         tokio::time::sleep(tokio::time::Duration::from_secs_f32(0.6)).await;
                     }
                     100008 => {
                         log::info!("有尚未完成的订单, 请前往b站订单列表查看");
-                        //再次降速, 不给b站服务器带来压力
                         tokio::time::sleep(tokio::time::Duration::from_secs_f32(0.6)).await;
                     }
                     211 => {
@@ -1015,7 +1026,7 @@ async fn try_create_order(
                     }
 
                     //需要重新获取token的情况
-                    100041 | 100050 => {
+                    100050 => {
                         log::info!("token失效, 即将重新获取token");
                         return Some((true, false)); // 需要重新获取token
                     }

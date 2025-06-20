@@ -2,7 +2,7 @@ use crate::account::Account;
 use crate::account::add_account;
 use crate::captcha::LocalCaptcha;
 use crate::captcha::captcha;
-use crate::http_utils::{request_get, request_get_sync, request_post};
+use crate::http_utils::{request_get, request_post};
 use crate::utility::CustomConfig;
 use reqwest::Client;
 use serde_json::json;
