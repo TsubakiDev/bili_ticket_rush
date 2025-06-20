@@ -24,6 +24,7 @@ pub struct WebData {
     pub b_nut: String,
     pub buvid_fp: String,
     pub _uuid: String,
+    pub sess_data: String,
     pub bili_ticket: String,
     pub bili_ticket_expires: String,
     pub msource: String,
@@ -73,6 +74,8 @@ impl CookieManager {
         create_type: usize, //0: 默认网页浏览器 1: app
     ) -> Self {
         let cookies = Self::parse_cookie_string(original_cookie);
+
+        log::debug!("cookies: {:?}", cookies);
 
         match create_type {
             0 => {
@@ -157,8 +160,23 @@ impl CookieManager {
                         new_fp
                     }
                 };
-
                 log::debug!("fp: {}", fp);
+
+                let sess_data = {
+                    let cookies_map = cookies.cookies_map.lock().unwrap();
+                    let existing_sess_data = cookies_map.get("SESSDATA").cloned();
+                    drop(cookies_map);
+
+                    if let Some(sess_data_value) = existing_sess_data {
+                        sess_data_value
+                    } else {
+                        //let new_ssid = gen_ssid();
+                        //new_ssid
+                        log::warn!("未找到 SESSDATA, 可能需要登录");
+                        unimplemented!() // 返回空字符串或其他默认值
+                    }
+                };
+
                 let _uuid = {
                     let cookies_map = cookies.cookies_map.lock().unwrap();
                     let existing_uuid = cookies_map.get("_uuid").cloned();
@@ -273,6 +291,7 @@ impl CookieManager {
                 cookies.insert("buvid_fp".to_string(), fp.clone());
                 cookies.insert("_uuid".to_string(), _uuid.clone());
                 cookies.insert("bili_ticket".to_string(), bili_ticket.clone());
+                cookies.insert("SESSDATA".to_string(), sess_data.clone());
                 cookies.insert(
                     "bili_ticket_expires".to_string(),
                     bili_ticket_expires.clone(),
@@ -283,12 +302,13 @@ impl CookieManager {
                 cookies.insert("msource".to_string(), msourse.clone());
                 cookies.insert(_obf_key.to_string(), _01x96.clone());
                 log::debug!(
-                    "buvid3: {}, buvid4: {}, b_nut: {}, fp: {}, _uuid: {}, bili_ticket: {}, bili_ticket_expires: {}",
+                    "buvid3: {}, buvid4: {}, b_nut: {}, fp: {}, _uuid: {}, sessdata: {}, bili_ticket: {}, bili_ticket_expires: {}",
                     buvid3,
                     buvid4,
                     b_nut,
                     fp,
                     _uuid,
+                    sess_data,
                     bili_ticket,
                     bili_ticket_expires
                 );
@@ -302,6 +322,7 @@ impl CookieManager {
                     b_nut: b_nut,
                     buvid_fp: fp,
                     _uuid: _uuid,
+                    sess_data: sess_data,
                     bili_ticket: bili_ticket,
                     bili_ticket_expires: bili_ticket_expires,
                     msource: msourse,
