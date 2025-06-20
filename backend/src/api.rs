@@ -270,7 +270,7 @@ pub async fn get_ticket_token(
             "newRisk": "true",
         })
     } else {
-       json!({
+        json!({
             "project_id": project_id,
             "screen_id": screen_id,
             "sku_id": ticket_id,
@@ -311,17 +311,16 @@ pub async fn get_ticket_token(
                         match code {
                             0 => {
                                 let token = json["data"]["token"].as_str().unwrap_or("");
-                                let ptoken = json["data"]["ptoken"].as_str().unwrap_or("");
-
-                                if ptoken == "" {
+                                if !is_hot_project {
                                     log::info!("非 hotProject 项目");
                                     return Ok(TokenSet {
                                         token: token.to_string(),
                                         ptoken: String::new(),
-                                        ctoken: get_ctoken().unwrap(),
+                                        ctoken: String::new(),
                                     });
                                 }
 
+                                let ptoken = json["data"]["ptoken"].as_str().unwrap_or("");
                                 let ctoken = get_ctoken().unwrap();
                                 return Ok(TokenSet {
                                     token: token.to_string(),
@@ -365,7 +364,7 @@ pub async fn get_ticket_token(
                                     scene: Some(scene.to_string()),
                                     ua: Some(ua.to_string()),
                                     v_voucher: Some(v_voucher.to_string()),
-                                    risk_param: Some(risk_param.clone())
+                                    risk_param: Some(risk_param.clone()),
                                 };
                                 log::debug!("{:?}", token_risk_param);
                                 return Err(token_risk_param);
@@ -388,7 +387,7 @@ pub async fn get_ticket_token(
                                     scene: None,
                                     ua: None,
                                     v_voucher: None,
-                                    risk_param: None
+                                    risk_param: None,
                                 });
                             }
                         }
@@ -407,7 +406,7 @@ pub async fn get_ticket_token(
                             scene: None,
                             ua: None,
                             v_voucher: None,
-                            risk_param: None
+                            risk_param: None,
                         });
                     }
                 }
@@ -428,7 +427,7 @@ pub async fn get_ticket_token(
                     scene: None,
                     ua: None,
                     v_voucher: None,
-                    risk_param: None
+                    risk_param: None,
                 });
             }
         }
@@ -446,7 +445,7 @@ pub async fn get_ticket_token(
                 scene: None,
                 ua: None,
                 v_voucher: None,
-                risk_param: None
+                risk_param: None,
             });
         }
     }
@@ -470,11 +469,13 @@ pub async fn confirm_ticket_order(
         )
     } else {
         format!(
-            "https://show.bilibili.com/api/ticket/order/confirmInfoInfo?project_id={}&ptoken={}&voucher=&requestSource=neul-next&show_cashier=1&timestamp={}&token={}",
+            "https://show.bilibili.com/api/ticket/order/confirmInfo?project_id={}&ptoken={}&voucher=&requestSource=neul-next&show_cashier=1&timestamp={}&token={}",
             project_id, ptoken, timestamp, token
         )
     };
-    
+
+    log::debug!("确认订单请求URL: {}", url);
+
     let response = cookie_manager
         .get(&url)
         .await
