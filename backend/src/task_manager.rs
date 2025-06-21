@@ -987,7 +987,10 @@ async fn try_create_order(
                 // 处理错误情况
                 match e {
                     //需要继续重试的临时错误
-                    100001 | 429 => log::info!("b站限速"),
+                    100001 | 429 => {
+                        log::info!("b站限速, 延迟600ms请求");
+                        tokio::time::sleep(tokio::time::Duration::from_secs_f32(0.6)).await;
+                    },
                     900001 => {
                         log::info!("订单校验盾限制/提前下单惩罚");
                         tokio::time::sleep(tokio::time::Duration::from_secs_f32(0.6)).await;
