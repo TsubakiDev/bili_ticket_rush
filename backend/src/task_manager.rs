@@ -798,7 +798,7 @@ async fn await_countdown(mut countdown: f32) {
 
     loop {
         if countdown <= 1.3 {
-            tokio::time::sleep(Duration::from_secs_f32(1.2)).await;
+            tokio::time::sleep(Duration::from_secs_f32(0.8)).await;
             break;
         }
         log::info!("距离抢票时间还有{}秒", countdown);
