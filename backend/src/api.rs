@@ -116,8 +116,8 @@ pub async fn get_project(
     let req = cookie_manager
         .get(
             format!(
-                "https://show.bilibili.com/api/ticket/project/getV2?id={}",
-                project_id
+                "https://show.bilibili.com/api/ticket/project/getV2?version=134&id={}&project_id={}&requestSource=neul-next",
+                project_id, project_id
             )
             .as_str(),
         )
