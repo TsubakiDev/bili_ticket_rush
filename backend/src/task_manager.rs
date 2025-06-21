@@ -989,8 +989,8 @@ async fn try_create_order(
                     //需要继续重试的临时错误
                     100001 => log::info!("请重新登录, 可能是cookie过期或无效"),
                     429 => {
-                        log::info!("b站限速, 延迟600ms请求");
-                        tokio::time::sleep(tokio::time::Duration::from_secs_f32(0.6)).await;
+                        log::info!("b站限速, 延迟800ms请求");
+                        tokio::time::sleep(tokio::time::Duration::from_secs_f32(0.8)).await;
                     },
                     900001 => {
                         log::info!("订单校验盾限制/提前下单惩罚");
