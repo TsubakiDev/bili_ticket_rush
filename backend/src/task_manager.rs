@@ -987,7 +987,8 @@ async fn try_create_order(
                 // 处理错误情况
                 match e {
                     //需要继续重试的临时错误
-                    100001 | 429 => {
+                    100001 => log::info!("请重新登录, 可能是cookie过期或无效"),
+                    429 => {
                         log::info!("b站限速, 延迟600ms请求");
                         tokio::time::sleep(tokio::time::Duration::from_secs_f32(0.6)).await;
                     },
