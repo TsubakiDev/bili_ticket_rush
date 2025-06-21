@@ -298,6 +298,12 @@ pub async fn get_ticket_token(
                     rt.block_on(resp.json::<serde_json::Value>())
                 }) {
                     Ok(json) => {
+                        let shield = json["data"]["shield"].as_i64().unwrap_or(0) == 1;
+
+                        if shield {
+                            log::debug!("shield = true")
+                        }
+
                         log::debug!("获取票token: {}", json);
                         let errno_value = json.get("errno").and_then(|v| v.as_i64()).unwrap_or(-1);
                         let code_value = json.get("code").and_then(|v| v.as_i64()).unwrap_or(-1);

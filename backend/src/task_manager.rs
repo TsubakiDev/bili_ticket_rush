@@ -10,9 +10,9 @@ use crate::api::*;
 use crate::show_orderlist::get_orderlist;
 use common::captcha::handle_risk_verification;
 use common::login::{send_loginsms, sms_login};
+use common::task_manager::*;
 use common::ticket::ConfirmTicketResult;
 use common::ticket::*;
-use common::task_manager::*;
 use tokio::runtime::Runtime;
 use tokio::sync::mpsc;
 
@@ -787,15 +787,13 @@ fn create_task_from_request(request: &TaskRequest, task_id: String) -> Task {
 }
 
 async fn await_countdown(mut countdown: f32) {
-    if countdown > 20.0 {
-        loop {
-            if countdown <= 20.0 {
-                break;
-            }
-            countdown -= 15.0;
-            tokio::time::sleep(Duration::from_secs(15)).await;
-            log::info!("距离抢票时间还有{}秒", countdown);
+    loop {
+        if countdown <= 20.0 {
+            break;
         }
+        countdown -= 15.0;
+        tokio::time::sleep(Duration::from_secs(15)).await;
+        log::info!("距离抢票时间还有{}秒", countdown);
     }
 
     loop {
@@ -807,9 +805,6 @@ async fn await_countdown(mut countdown: f32) {
         countdown -= 1.0;
         tokio::time::sleep(Duration::from_secs(1)).await;
     }
-
-    // 新增的0.5秒等待
-    tokio::time::sleep(Duration::from_secs_f32(0.5)).await;
 }
 
 fn should_skip_ticket(ticket_data: &ScreenTicketInfo, skip_words: &Option<Vec<String>>) -> bool {
@@ -992,7 +987,7 @@ async fn try_create_order(
                 // 处理错误情况
                 match e {
                     //需要继续重试的临时错误
-                    100001 | 429  => log::info!("b站限速"),
+                    100001 | 429 => log::info!("b站限速"),
                     900001 => {
                         log::info!("订单校验盾限制/提前下单惩罚");
                         tokio::time::sleep(tokio::time::Duration::from_secs_f32(0.6)).await;
@@ -1004,7 +999,6 @@ async fn try_create_order(
                     100041 => {
                         log::info!("提前下单, 开票后触发5分钟 900001 处罚");
                         tokio::time::sleep(tokio::time::Duration::from_secs_f32(0.6)).await;
-                        return Some((true, false));
                     }
                     100009 => {
                         log::info!("当前票种库存不足");
