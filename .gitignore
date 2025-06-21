@@ -21,10 +21,3 @@ config
 /models/
 /效果/
 permissions
-/resources/
-/httpx/
-/idna/
-/loguru/
-/qrcode/
-/bilibili_util.cp312-win_amd64.pyd
-/bilibili_util.cpython-312-darwin.so

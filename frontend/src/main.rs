@@ -4,7 +4,6 @@
 use eframe::epaint::Vec2;
 
 mod app;
-mod resources;
 mod ui;
 mod windows;
 
@@ -45,8 +44,6 @@ fn main() -> Result<(), eframe::Error> {
 
         ..Default::default()
     };
-
-    let _ = resources::ensure_resources();
 
     eframe::run_native(
         "Bilibili Ticket Rush",

@@ -276,7 +276,7 @@ pub async fn get_ticket_token(
             "sku_id": ticket_id,
             "count": count,
             "order_type": 1,
-            "token": get_ctoken().unwrap(),
+            "token": get_ctoken(SystemTime::now().duration_since(UNIX_EPOCH).unwrap_or_default().as_secs() * 1000 as u64),
             "requestSource": "neul-next",
             "newRisk": "true",
         })
@@ -321,7 +321,7 @@ pub async fn get_ticket_token(
                                 }
 
                                 let ptoken = json["data"]["ptoken"].as_str().unwrap_or("");
-                                let ctoken = get_ctoken().unwrap();
+                                let ctoken = get_ctoken(SystemTime::now().duration_since(UNIX_EPOCH).unwrap_or_default().as_secs() * 1000 as u64);
                                 return Ok(TokenSet {
                                     token: token.to_string(),
                                     ptoken: ptoken.to_string(),
@@ -563,7 +563,7 @@ pub async fn create_order(
     let count = confirm_result.count.clone();
     let pay_money = confirm_result.pay_money.clone();
 
-    let ctoken = get_ctoken().unwrap_or("".to_string());
+    let ctoken = get_ctoken(SystemTime::now().duration_since(UNIX_EPOCH).unwrap_or_default().as_secs() * 1000 as u64);
 
     let ticket_id = match biliticket.select_ticket_id.clone() {
         Some(id) => id,

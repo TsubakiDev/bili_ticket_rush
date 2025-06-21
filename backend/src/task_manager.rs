@@ -527,6 +527,7 @@ async fn grab_ticket_core(req: GrabTicketRequest, result_tx: mpsc::Sender<TaskRe
         .await
         {
             Ok(token_set) => {
+                tokio::time::sleep(Duration::from_secs_f32(1.0)).await;
                 if handle_ticket_grab(&req, &token_set.token, &token_set.ptoken, &result_tx).await {
                     break; // 抢票流程结束
                 }

@@ -1,8 +1,8 @@
+use base64::prelude::BASE64_STANDARD;
+use base64::Engine;
 use chrono::{Local as _l1, Utc as _u1};
 use hmac::{Hmac as _h1, Mac as _m1};
 use md5;
-use pyo3::types::{PyAnyMethods, PyModule};
-use pyo3::{PyResult, Python};
 use rand::Rng as _r1;
 use reqwest::Client as _c1;
 use serde_json::Value as _v1;
@@ -436,26 +436,66 @@ pub fn gen_01x88() -> String {
     }
 }
 
-pub fn get_ctoken() -> PyResult<String> {
-    pyo3::prepare_freethreaded_python();
+pub fn get_ctoken(prepare_time: u64) -> String {
+    // 获取当前时间戳（毫秒）
+    let current_time_ms = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .expect("Time went backwards")
+        .as_millis() as u64;
 
-    Python::with_gil(|py| {
-        let sys = py.import("sys")?;
-        let os = py.import("os")?;
-        let binding = sys.getattr("path")?;
-        let sys_path = binding.downcast::<pyo3::types::PyList>()?;
-        let cwd = os.call_method0("getcwd")?;
-        sys_path.call_method1("append", (cwd,))?;
+    // 计算时间差并转换为秒
+    let calculated_time = (current_time_ms - prepare_time) as f64 / 1000.0;
+    let mut sec_from_prepare = calculated_time.floor() as u16;
+    if sec_from_prepare <= 0 {
+        sec_from_prepare = 1;
+    }
 
-        let util = PyModule::import(py, "bilibili_util").expect("Failed to load bilibili_util.");
+    // 固定参数值（与Python代码一致）
+    let scroll_x = 0;
+    let scroll_y = 0;
+    let inner_width = 1170;
+    let inner_height = 2532;
+    let outer_width = 1170;
+    let outer_height = 2532;
+    let screen_x = 0;
+    let screen_y = 44;
+    let screen_width = 1170;
 
-        let ctoken = util
-            .getattr("BilibiliClient")?
-            .call_method1("generate_ctoken", (1,))?
-            .extract()?; // Instantiate class
+    // 创建16字节缓冲区
+    let mut data = [0u8; 16];
+    
+    // 填充数据
+    data[0] = 0;
+    data[1] = scroll_x.min(255) as u8;
+    data[2] = 0;
+    data[3] = scroll_y.min(255) as u8;
+    data[4] = inner_width.min(255) as u8;
+    data[5] = 1;
+    data[6] = inner_height.min(255) as u8;
+    data[7] = outer_width.min(255) as u8;
+    
+    // 写入大端序的u16值（8-9位置）
+    let sec_bytes = sec_from_prepare.to_be_bytes();
+    data[8..10].copy_from_slice(&sec_bytes);
+    
+    // 写入另一个u16值（10-11位置）
+    let calc_bytes = calculated_time.floor() as u16;
+    data[10..12].copy_from_slice(&calc_bytes.to_be_bytes());
+    
+    data[12] = outer_height.min(255) as u8;
+    data[13] = screen_x.min(255) as u8;
+    data[14] = screen_y.min(255) as u8;
+    data[15] = screen_width.min(255) as u8;
 
-        Ok(ctoken)
-    })
+    // 扩展为32字节数组（每个字节后添加0字节）
+    let mut expanded = Vec::with_capacity(32);
+    for &b in &data {
+        expanded.push(b);
+        expanded.push(0);
+    }
+
+    // Base64编码
+    BASE64_STANDARD.encode(&expanded)
 }
 
 fn _rand_bool(probability: f64) -> bool {
