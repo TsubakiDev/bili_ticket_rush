@@ -2,7 +2,7 @@ use crate::cookie_manager::CookieManager;
 use crate::{ticket::TokenRiskParam, utility::CustomConfig};
 use bili_ticket_gt::abstraction::{Api, GenerateW};
 use bili_ticket_gt::click::Click;
-use bili_ticket_gt::slide::{self, Slide};
+use bili_ticket_gt::slide::Slide;
 use serde_json::json;
 use std::fmt;
 use std::sync::{Arc, Mutex};

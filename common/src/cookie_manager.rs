@@ -143,7 +143,7 @@ impl CookieManager {
                     } else {
                         gen_buvid3and4(client.clone())
                             .await
-                            .unwrap_or_else(|err| ("".to_string(), "".to_string(), "".to_string()))
+                            .unwrap_or_else(|_| ("".to_string(), "".to_string(), "".to_string()))
                     }
                 };
                 log::debug!("buvid3: {}, buvid4: {}, b_nut: {}", buvid3, buvid4, b_nut);
@@ -533,7 +533,7 @@ impl CookieManager {
             }
             1 => {
                 // App 请求头
-                if let Some(app_data) = &self.app_data {
+                if let Some(_app_data) = &self.app_data {
                     builder.header("x-bili-aurora-zone", "sh")
                     // 其他 app 相关头
                 } else {

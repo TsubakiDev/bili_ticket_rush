@@ -66,7 +66,7 @@ pub async fn request_post<T: serde::Serialize + ?Sized>(
 pub fn request_get_sync(
     client: &Client,
     url: &str,
-    ua: Option<String>,
+    _ua: Option<String>,
     cookie: Option<&str>,
 ) -> Result<Response, Error> {
     let rt = tokio::runtime::Runtime::new().unwrap();
@@ -76,7 +76,7 @@ pub fn request_get_sync(
 pub fn request_post_sync(
     client: &Client,
     url: &str,
-    ua: Option<String>,
+    _ua: Option<String>,
     cookie: Option<&str>,
     json_data: Option<&serde_json::Value>,
 ) -> Result<Response, Error> {

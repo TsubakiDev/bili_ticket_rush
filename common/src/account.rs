@@ -154,7 +154,7 @@ impl Account {
 }
 
 // 创建client
-pub fn create_client_for_account(cookie: &str) -> reqwest::Client {
+pub fn create_client_for_account(_cookie: &str) -> reqwest::Client {
     use reqwest::header;
 
     let random_id = format!(

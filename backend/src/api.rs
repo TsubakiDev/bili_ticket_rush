@@ -298,12 +298,6 @@ pub async fn get_ticket_token(
                     rt.block_on(resp.json::<serde_json::Value>())
                 }) {
                     Ok(json) => {
-                        let shield = json["data"]["shield"].as_i64().unwrap_or(0) == 1;
-
-                        if shield {
-                            log::debug!("shield = true")
-                        }
-
                         log::debug!("获取票token: {}", json);
                         let errno_value = json.get("errno").and_then(|v| v.as_i64()).unwrap_or(-1);
                         let code_value = json.get("code").and_then(|v| v.as_i64()).unwrap_or(-1);
@@ -577,15 +571,12 @@ pub async fn create_order(
     };
     let ticket_id_int = ticket_id.parse::<i64>().map_err(|_| 999)?;
 
-    let use_ctoken_ptoken = biliticket.project_info.clone().unwrap().is_hot_project;
-
     let data = match biliticket.id_bind {
         0 => {
             // 不实名制购票人信息
             let no_bind_buyer_info = biliticket.no_bind_buyer_info.clone().unwrap();
 
-            let data = if use_ctoken_ptoken {
-                json!({
+            let data = json!({
                     "project_id": project_id.parse::<i64>().unwrap_or(0),
                     "screen_id": biliticket.screen_id.parse::<i64>().unwrap_or(0),
                     "sku_id": ticket_id_int,
@@ -602,30 +593,11 @@ pub async fn create_order(
                     "count": count,
                     "timestamp": timestamp,
                     "order_type": 1,
-                })
-            } else {
-                json!({
-                    "project_id": project_id.parse::<i64>().unwrap_or(0),
-                    "screen_id": biliticket.screen_id.parse::<i64>().unwrap_or(0),
-                    "sku_id": ticket_id_int,
-                    "token": token,
-                    "buyer": no_bind_buyer_info.name,
-                    "tel": no_bind_buyer_info.tel,
-                    "clickPosition": click_position,
-                    "newRisk": true,
-                    "requestSource": if is_mobile { "neul-next" } else { "pc-new" },
-                    "deviceId": cookie_manager.get_cookie("deviceFingerprint"),
-                    "pay_money": pay_money,
-                    "count": count,
-                    "timestamp": timestamp,
-                    "order_type": 1,
-                })
-            };
+                });
             data
         }
         1 | 2 => {
-            let data = if use_ctoken_ptoken {
-                json!({
+            let data = json!({
                     "project_id": project_id.parse::<i64>().unwrap_or(0),
                     "screen_id": biliticket.screen_id.parse::<i64>().unwrap_or(0),
                     "sku_id": ticket_id_int,
@@ -641,24 +613,7 @@ pub async fn create_order(
                     "count": count,
                     "timestamp": timestamp,
                     "order_type": 1,
-                })
-            } else {
-                json!({
-                    "project_id": project_id.parse::<i64>().unwrap_or(0),
-                    "screen_id": biliticket.screen_id.parse::<i64>().unwrap_or(0),
-                    "sku_id": ticket_id_int,
-                    "token": token,
-                    "buyer_info": serde_json::to_string(buyer_info).unwrap_or_default(),
-                    "clickPosition": click_position,
-                    "newRisk": true,
-                    "requestSource": if is_mobile { "neul-next" } else { "pc-new" },
-                    "deviceId": cookie_manager.get_cookie("deviceFingerprint"),
-                    "pay_money": pay_money,
-                    "count": count,
-                    "timestamp": timestamp,
-                    "order_type": 1,
-                })
-            };
+                });
             data
         }
         _ => {
