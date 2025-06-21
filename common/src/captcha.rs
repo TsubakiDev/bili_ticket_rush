@@ -1,10 +1,13 @@
 use crate::cookie_manager::CookieManager;
 use crate::{ticket::TokenRiskParam, utility::CustomConfig};
+use bili_ticket_gt::abstraction::{Api, GenerateW};
 use bili_ticket_gt::click::Click;
-use bili_ticket_gt::slide::Slide;
+use bili_ticket_gt::slide::{self, Slide};
 use serde_json::json;
 use std::fmt;
 use std::sync::{Arc, Mutex};
+use std::thread::sleep;
+use std::time::{Duration, Instant};
 
 #[derive(Clone)]
 pub struct LocalCaptcha {
@@ -40,7 +43,7 @@ impl LocalCaptcha {
     pub fn new() -> Self {
         LocalCaptcha {
             click: Some(Arc::new(Mutex::new(Click::default()))), //初始化点击对象
-            slide: None, //暂时先不初始化滑块, 疑似出现滑块概率极低
+            slide: Some(Arc::new(Mutex::new(Slide::default()))), //暂时先不初始化滑块, 疑似出现滑块概率极低
         }
     }
 }
@@ -57,13 +60,29 @@ pub async fn captcha(
         0 => {
             match captcha_type {
                 32 => {
-                    let mut slide = match local_captcha.slide {
-                        Some(c) => c,
+                    let slide_mutex = match &local_captcha.slide {
+                        Some(c) => Arc::clone(c),
                         None => {
                             return Err("本地打码需要传入slide对象".to_string());
                         }
                     };
-                    Err("本地打码暂不支持三代滑块".to_string())
+                    let gt_clone = gt.to_string();
+                    let challenge_clone = challenge.to_string();
+                    let validate = tokio::task::spawn_blocking(move || {
+                        let mut slide = slide_mutex.lock().unwrap();
+                        slide_simple_match_retry(&mut slide, &gt_clone, &challenge_clone)
+                    })
+                    .await
+                    .map_err(|e| format!("任务执行出错: {}", e))?
+                    .map_err(|e| format!("验证码模块出错: {}", e))?;
+
+                    log::info!("验证码识别结果: {:?}", validate);
+                    return Ok(serde_json::to_string(&json!({
+                        "challenge": challenge,
+                        "validate": validate,
+                        "seccode": format!("{}|jordan", validate),
+                    }))
+                    .map_err(|e| format!("序列化JSON失败: {}", e))?);
                 }
                 33 => {
                     //三代点字
@@ -174,6 +193,51 @@ pub async fn captcha(
         _ => Err("无效的验证码模式".to_string()),
     }
 }
+
+fn slide_simple_match_retry(slide: &mut Slide, gt: &str, challenge: &str) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
+        let (_, _) = slide.get_c_s(gt, challenge, None)?;
+        // let _ = slide.get_type(gt, challenge, None)?; // Removed due to private type error
+        let (c, s, args) = slide.get_new_c_s_args(gt, challenge)?;
+        let res = slide_vvv(slide, gt, challenge, &c, s.as_str(), args);
+        if res.is_ok() {
+            return res;
+        }
+
+        loop {
+            let args = slide.refresh(gt, challenge)?;
+            let res = slide_vvv(slide, gt, challenge, &c, s.as_str(), args);
+            if res.is_ok() {
+                return res;
+            }
+        }
+    }
+
+fn slide_vvv(
+        slide: &mut Slide,
+        gt: &str,
+        challenge: &str,
+        c: &Vec<u8>,
+        s: &str,
+        args: (String, String, String, String),
+    ) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
+        let start = Instant::now();
+        let key = slide.calculate_key(args)?;
+        let w = slide.generate_w(
+            key.as_str(),
+            gt,
+            challenge,
+            c.as_ref(),
+            s,
+        )?;
+        let elapsed = start.elapsed();
+        if elapsed < Duration::from_secs(2) {
+            let sleep_duration = Duration::from_secs(2) - elapsed;
+            sleep(sleep_duration);
+        }
+
+        let (_, validate) = slide.verify(gt, challenge, Option::from(w.as_str()))?;
+        Ok(validate)
+    }
 
 pub async fn handle_risk_verification(
     cookie_manager: Arc<CookieManager>,
