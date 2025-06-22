@@ -1,5 +1,4 @@
 use common::cookie_manager::CookieManager;
-use rand::Rng;
 use core::str;
 use serde_json::json;
 use std::collections::HashMap;
@@ -490,7 +489,7 @@ async fn pickup_mode_grab(mut req: GrabTicketRequest, result_tx: mpsc::Sender<Ta
                 .await
                 {
                     Ok(token_set) => {
-                        tokio::time::sleep(Duration::from_secs_f32(0.8)).await;
+                        //tokio::time::sleep(Duration::from_secs_f32(0.8)).await;
                         if handle_ticket_grab(&req, &token_set.token, &token_set.ptoken, &result_tx)
                             .await
                         {
@@ -529,7 +528,7 @@ async fn grab_ticket_core(req: GrabTicketRequest, result_tx: mpsc::Sender<TaskRe
         .await
         {
             Ok(token_set) => {
-                tokio::time::sleep(Duration::from_secs_f32(0.8)).await;
+                //tokio::time::sleep(Duration::from_secs_f32(0.8)).await;
                 if handle_ticket_grab(&req, &token_set.token, &token_set.ptoken, &result_tx).await {
                     break; // 抢票流程结束
                 }
@@ -800,10 +799,10 @@ async fn await_countdown(mut countdown: f32) {
     }
 
     loop {
-        if countdown <= 1.3 {
+        /*if countdown <= 1.3 {
             tokio::time::sleep(Duration::from_secs_f32(0.8)).await;
             break;
-        }
+        }*/
         log::info!("距离抢票时间还有{}秒", countdown);
         countdown -= 1.0;
         tokio::time::sleep(Duration::from_secs(1)).await;
