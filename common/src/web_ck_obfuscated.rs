@@ -437,34 +437,29 @@ pub fn gen_01x88() -> String {
 }
 
 pub fn get_ctoken(prepare_time: u64) -> String {
-    // 获取当前时间戳（毫秒）
     let current_time_ms = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
         .expect("Time went backwards")
         .as_millis() as u64;
 
-    // 计算时间差并转换为秒
     let calculated_time = (current_time_ms - prepare_time) as f64 / 1000.0;
     let mut sec_from_prepare = calculated_time.floor() as u16;
     if sec_from_prepare <= 0 {
         sec_from_prepare = 1;
     }
 
-    // 固定参数值（与Python代码一致）
     let scroll_x = 0;
     let scroll_y = 0;
-    let inner_width = 1170;
-    let inner_height = 2532;
-    let outer_width = 1170;
-    let outer_height = 2532;
+    let inner_width = rand::thread_rng().gen_range(1170..2000);
+    let inner_height = rand::thread_rng().gen_range(2532..3000);
+    let outer_width = rand::thread_rng().gen_range(1170..2000);
+    let outer_height = rand::thread_rng().gen_range(2532..3000);
     let screen_x = 0;
     let screen_y = 44;
-    let screen_width = 1170;
+    let screen_width = rand::thread_rng().gen_range(1170..2000);
 
-    // 创建16字节缓冲区
     let mut data = [0u8; 16];
     
-    // 填充数据
     data[0] = 0;
     data[1] = scroll_x.min(255) as u8;
     data[2] = 0;
@@ -474,11 +469,9 @@ pub fn get_ctoken(prepare_time: u64) -> String {
     data[6] = inner_height.min(255) as u8;
     data[7] = outer_width.min(255) as u8;
     
-    // 写入大端序的u16值（8-9位置）
     let sec_bytes = sec_from_prepare.to_be_bytes();
     data[8..10].copy_from_slice(&sec_bytes);
     
-    // 写入另一个u16值（10-11位置）
     let calc_bytes = calculated_time.floor() as u16;
     data[10..12].copy_from_slice(&calc_bytes.to_be_bytes());
     
@@ -487,14 +480,12 @@ pub fn get_ctoken(prepare_time: u64) -> String {
     data[14] = screen_y.min(255) as u8;
     data[15] = screen_width.min(255) as u8;
 
-    // 扩展为32字节数组（每个字节后添加0字节）
     let mut expanded = Vec::with_capacity(32);
     for &b in &data {
         expanded.push(b);
         expanded.push(0);
     }
 
-    // Base64编码
     BASE64_STANDARD.encode(&expanded)
 }
 

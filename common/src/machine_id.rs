@@ -265,7 +265,7 @@ fn _extract_processor_signature() -> String {
                 (vec!["uname", "-a"], false),
             ];
 
-            for (cmd, use_it) in _cmds.iter().filter(|&&(_, use_it)| use_it) {
+            for (cmd, _use_it) in _cmds.iter().filter(|&&(_, use_it)| use_it) {
                 if let Ok(output) = Command::new(&cmd[0]).args(&cmd[1..]).output() {
                     let stdout = String::from_utf8_lossy(&output.stdout);
                     return stdout.trim().to_string();
