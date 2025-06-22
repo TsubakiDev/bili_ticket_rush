@@ -390,7 +390,7 @@ async fn timing_mode_grab(req: GrabTicketRequest, result_tx: mpsc::Sender<TaskRe
     let task_id = req.task_id.clone();
     let project_info = req.biliticket.project_info.clone();
 
-    match get_countdown(req.cookie_manager.clone(), project_info).await {
+    match get_countdown(project_info).await {
         Ok(countdown) => {
             if countdown > 0.0 {
                 log::info!("距离抢票时间还有{}秒", countdown);
@@ -1000,7 +1000,7 @@ async fn try_create_order(
                     }
                     900002 => {
                         log::info!("订单校验盾流量控制");
-                        tokio::time::sleep(tokio::time::Duration::from_secs_f32(0.6)).await;
+                        //tokio::time::sleep(tokio::time::Duration::from_secs_f32(0.6)).await;
                     }
                     100041 => {
                         log::info!("提前下单, 开票后触发5分钟 900001 处罚");
