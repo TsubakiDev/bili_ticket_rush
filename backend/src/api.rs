@@ -3,6 +3,7 @@ use common::http_utils::request_get;
 use common::login::QrCodeLoginStatus;
 use common::ticket::*;
 use common::web_ck_obfuscated::generate_ctoken;
+use ntp::NtpClient;
 use rand::{Rng, thread_rng};
 use reqwest::Client;
 use serde_json;
@@ -12,25 +13,40 @@ use std::sync::Arc;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 pub async fn get_countdown(info: Option<TicketInfo>) -> Result<f64, String> {
-    // 获取开始时间 (秒级)
     let sale_begin_sec = match info {
         Some(info) => info.sale_begin,
         None => return Err("获取开始时间失败".to_string()),
     };
     log::debug!("获取开始时间(秒级): {}", sale_begin_sec);
 
-    let local_sec = chrono::Utc::now().timestamp();
+    let ntp_time = get_ntp_time().await?;
+    log::debug!("通过NTP获取的当前时间(秒级): {}", ntp_time);
 
-    // 计算倒计时(秒级)
-    let countdown_sec = sale_begin_sec - local_sec;
+    let countdown_sec = sale_begin_sec - ntp_time;
     log::debug!(
         "计算倒计时(秒): 开始时间[{}] - 当前时间[{}] = 倒计时[{}]秒",
         sale_begin_sec,
-        local_sec,
+        ntp_time,
         countdown_sec
     );
 
     Ok(countdown_sec as f64)
+}
+
+async fn get_ntp_time() -> Result<i64, String> {
+    const ALIYUN_NTP_SERVER: &str = "ntp.aliyun.com";
+
+    let client = NtpClient::new();
+    let response = client
+        .get_time(ALIYUN_NTP_SERVER, 123)
+        .await
+        .map_err(|e| format!("NTP请求失败: {}", e))?;
+
+    let ntp_unix_sec = response.time.to_unix_time().sec as i64;
+
+    let adjusted_time = ntp_unix_sec + (response.offset as i64);
+
+    Ok(adjusted_time)
 }
 
 pub async fn get_buyer_info(
@@ -286,7 +302,7 @@ pub async fn get_ticket_token(
                                         token: token.to_string(),
                                         ptoken: String::new(),
                                         ctoken: String::new(),
-                                        now_time: prepare_time,
+                                        now_time: None,
                                     });
                                 }
 
@@ -440,7 +456,7 @@ pub async fn confirm_ticket_order(
         )
     } else {
         format!(
-            "https://show.bilibili.com/api/ticket/order/confirmInfo?project_id={}&ptoken={}&voucher=&requestSource=neul-next&show_cashier=1&timestamp={}&token={}",
+            "https://show.bilibili.com/api/ticket/order/confirmInfo?project_id={}&ptoken={}&requestSource=neul-next&show_cashier=1&timestamp={}&token={}",
             project_id, ptoken, timestamp, token
         )
     };

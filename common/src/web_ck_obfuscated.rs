@@ -475,10 +475,7 @@ pub fn generate_ctoken(prepare_time: u64) -> String {
     let calc_bytes = calculated_time.floor() as u16;
     data[10..12].copy_from_slice(&calc_bytes.to_be_bytes());
 
-    data[12] = 255;
-    data[13] = 0;
-    data[14] = 0;
-    data[15] = 255;
+    data[12..16].copy_from_slice(&[255, 0, 0, 255]);
 
     let mut expanded = Vec::with_capacity(32);
     for &b in &data {

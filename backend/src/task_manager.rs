@@ -489,7 +489,6 @@ async fn pickup_mode_grab(mut req: GrabTicketRequest, result_tx: mpsc::Sender<Ta
                 .await
                 {
                     Ok(information_set) => {
-                        tokio::time::sleep(Duration::from_secs_f32(0.8)).await;
                         if handle_ticket_grab(
                             &req,
                             &information_set.token,
@@ -534,7 +533,6 @@ async fn grab_ticket_core(req: GrabTicketRequest, result_tx: mpsc::Sender<TaskRe
         .await
         {
             Ok(information_set) => {
-                tokio::time::sleep(Duration::from_secs_f32(0.8)).await;
                 if handle_ticket_grab(
                     &req,
                     &information_set.token,
@@ -815,8 +813,8 @@ async fn await_countdown(mut countdown: f32) {
     }
 
     loop {
-        if countdown <= 1.0 {
-            tokio::time::sleep(Duration::from_secs_f32(0.01)).await;
+        if countdown <= 1.3 {
+            tokio::time::sleep(Duration::from_secs_f32(0.3)).await;
             break;
         }
         log::info!("距离抢票时间还有{}秒", countdown);
@@ -1016,7 +1014,7 @@ async fn try_create_order(
                     }
                     900001 => {
                         log::info!("订单校验盾限制/提前下单惩罚");
-                        tokio::time::sleep(tokio::time::Duration::from_secs_f32(0.6)).await;
+                        tokio::time::sleep(tokio::time::Duration::from_secs_f32(0.9)).await;
                     }
                     900002 => {
                         log::info!("订单校验盾流量控制");

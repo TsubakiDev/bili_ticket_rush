@@ -260,8 +260,10 @@ impl Default for SaleFlag {
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct ScreenTicketInfo {
-    pub saleStart: usize,        //开售时间(时间戳)   eg: 1720260000
-    pub saleEnd: usize,          //截止时间(时间戳)
+    #[serde(rename = "saleStart")]
+    pub sale_start: usize, //开售时间(时间戳)   eg: 1720260000
+    #[serde(rename = "saleEnd")]
+    pub sale_end: usize, //截止时间(时间戳)
     pub id: usize,               //票种id
     pub project_id: usize,       //项目id
     pub price: usize,            //票价(分)
@@ -334,10 +336,10 @@ pub struct BuyerInfo {
     pub id_card_back: String,
     #[serde(default)]
     pub verify_status: i64,
-    #[serde(default)]
-    pub isBuyerInfoVerified: bool,
-    #[serde(default)]
-    pub isBuyerValid: bool,
+    #[serde(default, rename = "isBuyerInfoVerified")]
+    pub is_buyer_info_verified: bool,
+    #[serde(default, rename = "isBuyerValid")]
+    pub is_buyer_valid: bool,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
