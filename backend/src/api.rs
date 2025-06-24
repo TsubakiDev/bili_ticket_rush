@@ -224,7 +224,12 @@ pub async fn get_ticket_token(
     ticket_id: &str,
     count: i16,
     is_hot_project: bool,
-) -> Result<TokenSet, TokenRiskParam> {
+) -> Result<InformationSet, TokenRiskParam> {
+    let mut prepare_time: f64 = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_millis();
+
     let params = if is_hot_project {
         json!({
             "project_id": project_id,
@@ -242,7 +247,7 @@ pub async fn get_ticket_token(
             "sku_id": ticket_id,
             "count": count,
             "order_type": 1,
-            "token": get_ctoken(SystemTime::now().duration_since(UNIX_EPOCH).unwrap_or_default().as_secs() * 1000 as u64),
+            "token": get_ctoken(prepare_time),
             "requestSource": "neul-next",
             "newRisk": "true",
         })
@@ -278,20 +283,22 @@ pub async fn get_ticket_token(
                             0 => {
                                 let token = json["data"]["token"].as_str().unwrap_or("");
                                 if !is_hot_project {
-                                    log::info!("非 hotProject 项目");
-                                    return Ok(TokenSet {
+                                    log::debug!("非 hotProject 项目");
+                                    return Ok(InformationSet {
                                         token: token.to_string(),
                                         ptoken: String::new(),
                                         ctoken: String::new(),
+                                        now_time: prepare_time,
                                     });
                                 }
 
                                 let ptoken = json["data"]["ptoken"].as_str().unwrap_or("");
-                                let ctoken = get_ctoken(SystemTime::now().duration_since(UNIX_EPOCH).unwrap_or_default().as_secs() * 1000 as u64);
-                                return Ok(TokenSet {
+                                let ctoken = get_ctoken(prepare_time);
+                                return Ok(InformationSet {
                                     token: token.to_string(),
                                     ptoken: ptoken.to_string(),
                                     ctoken: ctoken.to_string(),
+                                    now_time: prepare_time,
                                 });
                             }
                             -401 | 401 => {
@@ -475,6 +482,7 @@ pub async fn create_order(
     project_id: &str,
     token: &str,
     ptoken: &str,
+    now_time: f64,
     confirm_result: &ConfirmTicketResult,
     biliticket: &BilibiliTicket,
     buyer_info: &Vec<BuyerInfo>,
@@ -529,7 +537,7 @@ pub async fn create_order(
     let count = confirm_result.count.clone();
     let pay_money = confirm_result.pay_money.clone();
 
-    let ctoken = get_ctoken(SystemTime::now().duration_since(UNIX_EPOCH).unwrap_or_default().as_secs() * 1000 as u64);
+    let ctoken = get_ctoken(now_time - timestamp);
 
     let ticket_id = match biliticket.select_ticket_id.clone() {
         Some(id) => id,

@@ -488,9 +488,9 @@ async fn pickup_mode_grab(mut req: GrabTicketRequest, result_tx: mpsc::Sender<Ta
                 )
                 .await
                 {
-                    Ok(token_set) => {
-                        //tokio::time::sleep(Duration::from_secs_f32(0.8)).await;
-                        if handle_ticket_grab(&req, &token_set.token, &token_set.ptoken, &result_tx)
+                    Ok(information_set) => {
+                        tokio::time::sleep(Duration::from_secs_f32(0.8)).await;
+                        if handle_ticket_grab(&req, &information_set.token, &information_set.ptoken, &information_set.now_time, &result_tx)
                             .await
                         {
                             break 'main_loop; // 抢票成功, 退出捡漏模式
@@ -527,9 +527,9 @@ async fn grab_ticket_core(req: GrabTicketRequest, result_tx: mpsc::Sender<TaskRe
         )
         .await
         {
-            Ok(token_set) => {
-                //tokio::time::sleep(Duration::from_secs_f32(0.8)).await;
-                if handle_ticket_grab(&req, &token_set.token, &token_set.ptoken, &result_tx).await {
+            Ok(information_set) => {
+                tokio::time::sleep(Duration::from_secs_f32(0.8)).await;
+                if handle_ticket_grab(&req, &information_set.token, &information_set.ptoken, &information_set.now_time, &result_tx).await {
                     break; // 抢票流程结束
                 }
             }
@@ -557,6 +557,7 @@ async fn handle_ticket_grab(
     req: &GrabTicketRequest,
     token: &str,
     ptoken: &str,
+    now_time: f64,
     result_tx: &mpsc::Sender<TaskResult>,
 ) -> bool {
     let task_id = req.task_id.clone();
@@ -569,6 +570,7 @@ async fn handle_ticket_grab(
             &req.project_id,
             token,
             ptoken,
+            now_time,
             &task_id,
             req.uid,
             result_tx,
@@ -799,8 +801,8 @@ async fn await_countdown(mut countdown: f32) {
     }
 
     loop {
-        if countdown <= 0.05 {
-            tokio::time::sleep(Duration::from_secs_f32(0.004)).await;
+        if countdown <= 1.0 {
+            tokio::time::sleep(Duration::from_secs_f32(0.01)).await;
             break;
         }
         log::info!("距离抢票时间还有{}秒", countdown);
@@ -838,6 +840,7 @@ async fn process_grab_ticket(
     project_id: &str,
     token: &str,
     ptoken: &str,
+    now_time: f64,
     task_id: &str,
     uid: i64,
     result_tx: &mpsc::Sender<TaskResult>,
@@ -854,6 +857,7 @@ async fn process_grab_ticket(
                 project_id,
                 token,
                 ptoken,
+                now_time,
                 &confirm_result,
                 grab_ticket_req,
                 buyer_info,
@@ -881,6 +885,7 @@ async fn try_create_order(
     project_id: &str,
     token: &str,
     ptoken: &str,
+    now_time: f64,
     confirm_result: &ConfirmTicketResult,
     grab_ticket_req: &GrabTicketRequest,
     buyer_info: &Vec<BuyerInfo>,
@@ -905,6 +910,7 @@ async fn try_create_order(
             project_id,
             token,
             ptoken,
+            now_time,
             confirm_result,
             &grab_ticket_req.biliticket,
             buyer_info,
@@ -991,8 +997,8 @@ async fn try_create_order(
                     //需要继续重试的临时错误
                     100001 => log::info!("请重新登录, 可能是cookie过期或无效"),
                     429 => {
-                        log::info!("b站限速, 延迟800ms请求");
-                        tokio::time::sleep(tokio::time::Duration::from_secs_f32(0.8)).await;
+                        log::info!("b站限速, 延迟50ms请求");
+                        tokio::time::sleep(tokio::time::Duration::from_secs_f32(0.05)).await;
                     },
                     900001 => {
                         log::info!("订单校验盾限制/提前下单惩罚");
@@ -1000,7 +1006,7 @@ async fn try_create_order(
                     }
                     900002 => {
                         log::info!("订单校验盾流量控制");
-                        //tokio::time::sleep(tokio::time::Duration::from_secs_f32(0.6)).await;
+                        tokio::time::sleep(tokio::time::Duration::from_secs_f32(0.05)).await;
                     }
                     100041 => {
                         log::info!("提前下单, 开票后触发5分钟 900001 处罚");

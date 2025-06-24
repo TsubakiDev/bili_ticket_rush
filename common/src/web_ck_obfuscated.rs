@@ -448,26 +448,24 @@ pub fn get_ctoken(prepare_time: u64) -> String {
         sec_from_prepare = 1;
     }
 
-    let scroll_x = 0;
-    let scroll_y = 0;
-    let inner_width = rand::thread_rng().gen_range(1170..2000);
-    let inner_height = rand::thread_rng().gen_range(2532..3000);
-    let outer_width = rand::thread_rng().gen_range(1170..2000);
-    let outer_height = rand::thread_rng().gen_range(2532..3000);
-    let screen_x = 0;
-    let screen_y = 44;
-    let screen_width = rand::thread_rng().gen_range(1170..2000);
+    let mut rng = rand::thread_rng();
+
+    let touch_time = 66 + rng.gen_range(5..10) as u64;
+    let page_visible_time = 5 + rng.gen_range(0..2) as u64;
+    let open_window_time = 3 + rng.gen_range(0..2) as u64;
+    let timer_time = 5 + rng.gen_range(1..3) as u64;
+    let time_interval = 2;
 
     let mut data = [0u8; 16];
     
-    data[0] = 0;
-    data[1] = scroll_x.min(255) as u8;
-    data[2] = 0;
-    data[3] = scroll_y.min(255) as u8;
-    data[4] = inner_width.min(255) as u8;
-    data[5] = 1;
-    data[6] = inner_height.min(255) as u8;
-    data[7] = outer_width.min(255) as u8;
+    data[0] = touch_time.min(255) as u8;
+    data[1] = 0;
+    data[2] = page_visible_time.min(255) as u8;
+    data[3] = 0;
+    data[4] = 255;
+    data[5] = open_window_time.min(255) as u8;
+    data[6] = 255;
+    data[7] = 255;
     
     let sec_bytes = sec_from_prepare.to_be_bytes();
     data[8..10].copy_from_slice(&sec_bytes);
@@ -475,10 +473,10 @@ pub fn get_ctoken(prepare_time: u64) -> String {
     let calc_bytes = calculated_time.floor() as u16;
     data[10..12].copy_from_slice(&calc_bytes.to_be_bytes());
     
-    data[12] = outer_height.min(255) as u8;
-    data[13] = screen_x.min(255) as u8;
-    data[14] = screen_y.min(255) as u8;
-    data[15] = screen_width.min(255) as u8;
+    data[12] = 255;
+    data[13] = 0;
+    data[14] = 0;
+    data[15] = 255;
 
     let mut expanded = Vec::with_capacity(32);
     for &b in &data {
@@ -501,3 +499,4 @@ fn _obfuscated_delay() {
 fn hmac_sha256(key: &str, message: &str) -> Result<String, Box<dyn std::error::Error>> {
     _calc_hmac(key, message).map_err(|e| e.into())
 }
+  

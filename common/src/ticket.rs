@@ -54,10 +54,11 @@ pub struct ConfirmTicketInfo {
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct TokenSet {
+pub struct InformationSet {
     pub token: String,
     pub ptoken: String,
     pub ctoken: String,
+    pub now_time: i64,
 }
 
 //确认订单结构体
