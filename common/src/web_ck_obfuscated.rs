@@ -1,5 +1,5 @@
-use base64::prelude::BASE64_STANDARD;
 use base64::Engine;
+use base64::prelude::BASE64_STANDARD;
 use chrono::{Local as _l1, Utc as _u1};
 use hmac::{Hmac as _h1, Mac as _m1};
 use md5;
@@ -436,7 +436,7 @@ pub fn gen_01x88() -> String {
     }
 }
 
-pub fn get_ctoken(prepare_time: u64) -> String {
+pub fn generate_ctoken(prepare_time: u64) -> String {
     let current_time_ms = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
         .expect("Time went backwards")
@@ -457,22 +457,24 @@ pub fn get_ctoken(prepare_time: u64) -> String {
     let time_interval = 2;
 
     let mut data = [0u8; 16];
-    
-    data[0] = touch_time.min(255) as u8;
-    data[1] = 0;
-    data[2] = page_visible_time.min(255) as u8;
-    data[3] = 0;
-    data[4] = 255;
-    data[5] = open_window_time.min(255) as u8;
-    data[6] = 255;
-    data[7] = 255;
-    
+
+    data[0..8].copy_from_slice(&[
+        touch_time.min(255) as u8,
+        0,
+        page_visible_time.min(255) as u8,
+        0,
+        255,
+        open_window_time.min(255) as u8,
+        255,
+        255,
+    ]);
+
     let sec_bytes = sec_from_prepare.to_be_bytes();
     data[8..10].copy_from_slice(&sec_bytes);
-    
+
     let calc_bytes = calculated_time.floor() as u16;
     data[10..12].copy_from_slice(&calc_bytes.to_be_bytes());
-    
+
     data[12] = 255;
     data[13] = 0;
     data[14] = 0;
@@ -499,4 +501,3 @@ fn _obfuscated_delay() {
 fn hmac_sha256(key: &str, message: &str) -> Result<String, Box<dyn std::error::Error>> {
     _calc_hmac(key, message).map_err(|e| e.into())
 }
-  

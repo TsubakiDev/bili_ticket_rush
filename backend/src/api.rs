@@ -2,7 +2,7 @@ use common::cookie_manager::CookieManager;
 use common::http_utils::request_get;
 use common::login::QrCodeLoginStatus;
 use common::ticket::*;
-use common::web_ck_obfuscated::get_ctoken;
+use common::web_ck_obfuscated::generate_ctoken;
 use rand::{Rng, thread_rng};
 use reqwest::Client;
 use serde_json;
@@ -11,9 +11,7 @@ use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::{SystemTime, UNIX_EPOCH};
 
-pub async fn get_countdown(
-    info: Option<TicketInfo>,
-) -> Result<f64, String> {
+pub async fn get_countdown(info: Option<TicketInfo>) -> Result<f64, String> {
     // 获取开始时间 (秒级)
     let sale_begin_sec = match info {
         Some(info) => info.sale_begin,
@@ -247,7 +245,7 @@ pub async fn get_ticket_token(
             "sku_id": ticket_id,
             "count": count,
             "order_type": 1,
-            "token": get_ctoken(prepare_time),
+            "token": generate_ctoken(prepare_time),
             "requestSource": "neul-next",
             "newRisk": "true",
         })
@@ -293,7 +291,7 @@ pub async fn get_ticket_token(
                                 }
 
                                 let ptoken = json["data"]["ptoken"].as_str().unwrap_or("");
-                                let ctoken = get_ctoken(prepare_time);
+                                let ctoken = generate_ctoken(prepare_time);
                                 return Ok(InformationSet {
                                     token: token.to_string(),
                                     ptoken: ptoken.to_string(),
@@ -537,7 +535,7 @@ pub async fn create_order(
     let count = confirm_result.count.clone();
     let pay_money = confirm_result.pay_money.clone();
 
-    let ctoken = get_ctoken(now_time - timestamp);
+    let ctoken = generate_ctoken(now_time - timestamp);
 
     let ticket_id = match biliticket.select_ticket_id.clone() {
         Some(id) => id,
@@ -551,43 +549,43 @@ pub async fn create_order(
             let no_bind_buyer_info = biliticket.no_bind_buyer_info.clone().unwrap();
 
             let data = json!({
-                    "project_id": project_id.parse::<i64>().unwrap_or(0),
-                    "screen_id": biliticket.screen_id.parse::<i64>().unwrap_or(0),
-                    "sku_id": ticket_id_int,
-                    "token": token,
-                    "ptoken": ptoken,
-                    "ctoken": ctoken,
-                    "buyer": no_bind_buyer_info.name,
-                    "tel": no_bind_buyer_info.tel,
-                    "clickPosition": click_position,
-                    "newRisk": true,
-                    "requestSource": if is_mobile { "neul-next" } else { "pc-new" },
-                    "deviceId": cookie_manager.get_cookie("deviceFingerprint"),
-                    "pay_money": pay_money,
-                    "count": count,
-                    "timestamp": timestamp,
-                    "order_type": 1,
-                });
+                "project_id": project_id.parse::<i64>().unwrap_or(0),
+                "screen_id": biliticket.screen_id.parse::<i64>().unwrap_or(0),
+                "sku_id": ticket_id_int,
+                "token": token,
+                "ptoken": ptoken,
+                "ctoken": ctoken,
+                "buyer": no_bind_buyer_info.name,
+                "tel": no_bind_buyer_info.tel,
+                "clickPosition": click_position,
+                "newRisk": true,
+                "requestSource": if is_mobile { "neul-next" } else { "pc-new" },
+                "deviceId": cookie_manager.get_cookie("deviceFingerprint"),
+                "pay_money": pay_money,
+                "count": count,
+                "timestamp": timestamp,
+                "order_type": 1,
+            });
             data
         }
         1 | 2 => {
             let data = json!({
-                    "project_id": project_id.parse::<i64>().unwrap_or(0),
-                    "screen_id": biliticket.screen_id.parse::<i64>().unwrap_or(0),
-                    "sku_id": ticket_id_int,
-                    "token": token,
-                    "ptoken": ptoken,
-                    "ctoken": ctoken,
-                    "buyer_info": serde_json::to_string(buyer_info).unwrap_or_default(),
-                    "clickPosition": click_position,
-                    "newRisk": true,
-                    "requestSource": if is_mobile { "neul-next" } else { "pc-new" },
-                    "deviceId": cookie_manager.get_cookie("deviceFingerprint"),
-                    "pay_money": pay_money,
-                    "count": count,
-                    "timestamp": timestamp,
-                    "order_type": 1,
-                });
+                "project_id": project_id.parse::<i64>().unwrap_or(0),
+                "screen_id": biliticket.screen_id.parse::<i64>().unwrap_or(0),
+                "sku_id": ticket_id_int,
+                "token": token,
+                "ptoken": ptoken,
+                "ctoken": ctoken,
+                "buyer_info": serde_json::to_string(buyer_info).unwrap_or_default(),
+                "clickPosition": click_position,
+                "newRisk": true,
+                "requestSource": if is_mobile { "neul-next" } else { "pc-new" },
+                "deviceId": cookie_manager.get_cookie("deviceFingerprint"),
+                "pay_money": pay_money,
+                "count": count,
+                "timestamp": timestamp,
+                "order_type": 1,
+            });
             data
         }
         _ => {

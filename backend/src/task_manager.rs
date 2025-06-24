@@ -490,8 +490,14 @@ async fn pickup_mode_grab(mut req: GrabTicketRequest, result_tx: mpsc::Sender<Ta
                 {
                     Ok(information_set) => {
                         tokio::time::sleep(Duration::from_secs_f32(0.8)).await;
-                        if handle_ticket_grab(&req, &information_set.token, &information_set.ptoken, &information_set.now_time, &result_tx)
-                            .await
+                        if handle_ticket_grab(
+                            &req,
+                            &information_set.token,
+                            &information_set.ptoken,
+                            &information_set.now_time,
+                            &result_tx,
+                        )
+                        .await
                         {
                             break 'main_loop; // 抢票成功, 退出捡漏模式
                         }
@@ -529,7 +535,15 @@ async fn grab_ticket_core(req: GrabTicketRequest, result_tx: mpsc::Sender<TaskRe
         {
             Ok(information_set) => {
                 tokio::time::sleep(Duration::from_secs_f32(0.8)).await;
-                if handle_ticket_grab(&req, &information_set.token, &information_set.ptoken, &information_set.now_time, &result_tx).await {
+                if handle_ticket_grab(
+                    &req,
+                    &information_set.token,
+                    &information_set.ptoken,
+                    &information_set.now_time,
+                    &result_tx,
+                )
+                .await
+                {
                     break; // 抢票流程结束
                 }
             }
@@ -999,7 +1013,7 @@ async fn try_create_order(
                     429 => {
                         log::info!("b站限速, 延迟50ms请求");
                         tokio::time::sleep(tokio::time::Duration::from_secs_f32(0.05)).await;
-                    },
+                    }
                     900001 => {
                         log::info!("订单校验盾限制/提前下单惩罚");
                         tokio::time::sleep(tokio::time::Duration::from_secs_f32(0.6)).await;

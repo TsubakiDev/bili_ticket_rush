@@ -194,50 +194,48 @@ pub async fn captcha(
     }
 }
 
-fn slide_simple_match_retry(slide: &mut Slide, gt: &str, challenge: &str) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
-        let (_, _) = slide.get_c_s(gt, challenge, None)?;
-        // let _ = slide.get_type(gt, challenge, None)?; // Removed due to private type error
-        let (c, s, args) = slide.get_new_c_s_args(gt, challenge)?;
+fn slide_simple_match_retry(
+    slide: &mut Slide,
+    gt: &str,
+    challenge: &str,
+) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
+    let (_, _) = slide.get_c_s(gt, challenge, None)?;
+    // let _ = slide.get_type(gt, challenge, None)?; // Removed due to private type error
+    let (c, s, args) = slide.get_new_c_s_args(gt, challenge)?;
+    let res = slide_vvv(slide, gt, challenge, &c, s.as_str(), args);
+    if res.is_ok() {
+        return res;
+    }
+
+    loop {
+        let args = slide.refresh(gt, challenge)?;
         let res = slide_vvv(slide, gt, challenge, &c, s.as_str(), args);
         if res.is_ok() {
             return res;
         }
-
-        loop {
-            let args = slide.refresh(gt, challenge)?;
-            let res = slide_vvv(slide, gt, challenge, &c, s.as_str(), args);
-            if res.is_ok() {
-                return res;
-            }
-        }
     }
+}
 
 fn slide_vvv(
-        slide: &mut Slide,
-        gt: &str,
-        challenge: &str,
-        c: &Vec<u8>,
-        s: &str,
-        args: (String, String, String, String),
-    ) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
-        let start = Instant::now();
-        let key = slide.calculate_key(args)?;
-        let w = slide.generate_w(
-            key.as_str(),
-            gt,
-            challenge,
-            c.as_ref(),
-            s,
-        )?;
-        let elapsed = start.elapsed();
-        if elapsed < Duration::from_secs(2) {
-            let sleep_duration = Duration::from_secs(2) - elapsed;
-            sleep(sleep_duration);
-        }
-
-        let (_, validate) = slide.verify(gt, challenge, Option::from(w.as_str()))?;
-        Ok(validate)
+    slide: &mut Slide,
+    gt: &str,
+    challenge: &str,
+    c: &Vec<u8>,
+    s: &str,
+    args: (String, String, String, String),
+) -> Result<String, Box<dyn std::error::Error + Send + Sync>> {
+    let start = Instant::now();
+    let key = slide.calculate_key(args)?;
+    let w = slide.generate_w(key.as_str(), gt, challenge, c.as_ref(), s)?;
+    let elapsed = start.elapsed();
+    if elapsed < Duration::from_secs(2) {
+        let sleep_duration = Duration::from_secs(2) - elapsed;
+        sleep(sleep_duration);
     }
+
+    let (_, validate) = slide.verify(gt, challenge, Option::from(w.as_str()))?;
+    Ok(validate)
+}
 
 pub async fn handle_risk_verification(
     cookie_manager: Arc<CookieManager>,
