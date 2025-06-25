@@ -5,7 +5,7 @@ edition = "2024"
 
 [dependencies]
 tokio = { version = "1", features = ["full"] }
-rand = "0.8"
+rand = "0.9"
 
 eframe = { version = "0.23.0", features = ["default"] }
 egui = "0.31.0"
