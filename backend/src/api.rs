@@ -1,13 +1,14 @@
+use chrono::{Local, TimeZone};
 use common::cookie_manager::CookieManager;
 use common::http_utils::request_get;
 use common::login::QrCodeLoginStatus;
 use common::ticket::*;
 use common::web_ck_obfuscated::generate_ctoken;
-use ntp::NtpClient;
-use rand::{Rng, thread_rng};
+use rand::Rng;
 use reqwest::Client;
 use serde_json;
 use serde_json::{Value, json};
+use sntp_request::SntpRequest;
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::{SystemTime, UNIX_EPOCH};
@@ -19,34 +20,24 @@ pub async fn get_countdown(info: Option<TicketInfo>) -> Result<f64, String> {
     };
     log::debug!("获取开始时间(秒级): {}", sale_begin_sec);
 
-    let ntp_time = get_ntp_time().await?;
-    log::debug!("通过NTP获取的当前时间(秒级): {}", ntp_time);
+    let sntp = SntpRequest::new();
+    let timestamp_result =
+        Local.timestamp_opt(sntp.get_unix_time_by_addr("ntp.aliyun.com:123").unwrap(), 0);
+    let timestamp = match timestamp_result.single() {
+        Some(dt) => dt.timestamp(),
+        None => return Err("无法获取当前时间".to_string()),
+    };
+    log::debug!("通过NTP获取的当前时间(秒级): {:?}", timestamp);
 
-    let countdown_sec = sale_begin_sec - ntp_time;
+    let countdown_sec = sale_begin_sec - timestamp;
     log::debug!(
         "计算倒计时(秒): 开始时间[{}] - 当前时间[{}] = 倒计时[{}]秒",
         sale_begin_sec,
-        ntp_time,
+        timestamp,
         countdown_sec
     );
 
     Ok(countdown_sec as f64)
-}
-
-async fn get_ntp_time() -> Result<i64, String> {
-    const ALIYUN_NTP_SERVER: &str = "ntp.aliyun.com";
-
-    let client = NtpClient::new();
-    let response = client
-        .get_time(ALIYUN_NTP_SERVER, 123)
-        .await
-        .map_err(|e| format!("NTP请求失败: {}", e))?;
-
-    let ntp_unix_sec = response.time.to_unix_time().sec as i64;
-
-    let adjusted_time = ntp_unix_sec + (response.offset as i64);
-
-    Ok(adjusted_time)
 }
 
 pub async fn get_buyer_info(
@@ -239,10 +230,10 @@ pub async fn get_ticket_token(
     count: i16,
     is_hot_project: bool,
 ) -> Result<InformationSet, TokenRiskParam> {
-    let mut prepare_time: f64 = SystemTime::now()
+    let prepare_time = SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .unwrap_or_default()
-        .as_millis();
+        .as_millis() as u64;
 
     let params = if is_hot_project {
         json!({
@@ -302,7 +293,6 @@ pub async fn get_ticket_token(
                                         token: token.to_string(),
                                         ptoken: String::new(),
                                         ctoken: String::new(),
-                                        now_time: None,
                                     });
                                 }
 
@@ -312,7 +302,6 @@ pub async fn get_ticket_token(
                                     token: token.to_string(),
                                     ptoken: ptoken.to_string(),
                                     ctoken: ctoken.to_string(),
-                                    now_time: prepare_time,
                                 });
                             }
                             -401 | 401 => {
@@ -496,7 +485,6 @@ pub async fn create_order(
     project_id: &str,
     token: &str,
     ptoken: &str,
-    now_time: f64,
     confirm_result: &ConfirmTicketResult,
     biliticket: &BilibiliTicket,
     buyer_info: &Vec<BuyerInfo>,
@@ -551,7 +539,7 @@ pub async fn create_order(
     let count = confirm_result.count.clone();
     let pay_money = confirm_result.pay_money.clone();
 
-    let ctoken = generate_ctoken(now_time - timestamp);
+    let ctoken = generate_ctoken(timestamp);
 
     let ticket_id = match biliticket.select_ticket_id.clone() {
         Some(id) => id,
@@ -701,7 +689,7 @@ pub async fn random_click_position(
     screen_width: Option<u32>,
     screen_height: Option<u32>,
 ) -> Value {
-    let mut rng = thread_rng();
+    let mut rng = rand::rng();
 
     // 获取手机屏幕尺寸（默认使用常见尺寸1080x2400）
     let mobile_width = screen_width.unwrap_or(1080);
@@ -716,8 +704,8 @@ pub async fn random_click_position(
         ClickPositionType::MobileConfirm => {
             // 手机端确认下单按钮位置(右下角)
             // 使用比例计算: x在屏幕宽度的0.55-0.9之间, y在屏幕底部附近
-            let x_ratio = rng.gen_range(0.55..0.9);
-            let y_ratio = rng.gen_range(0.9..0.95);
+            let x_ratio = rng.random_range(0.55..0.9);
+            let y_ratio = rng.random_range(0.9..0.95);
 
             let x = (mobile_width as f32 * x_ratio) as i32;
             let y = (mobile_height as f32 * y_ratio) as i32;
@@ -727,8 +715,8 @@ pub async fn random_click_position(
         ClickPositionType::RetryButton => {
             // 手机版"再试一次"按钮位置(屏幕中间靠下)
             // x坐标在屏幕宽度的1/3到2/3之间, y坐标在屏幕高度的2/3左右
-            let x_ratio = rng.gen_range(0.33..0.67); // 屏幕宽度的2/6到4/6之间
-            let y_ratio = rng.gen_range(0.6..0.7); // 屏幕高度的2/3左右
+            let x_ratio = rng.random_range(0.33..0.67); // 屏幕宽度的2/6到4/6之间
+            let y_ratio = rng.random_range(0.6..0.7); // 屏幕高度的2/3左右
 
             let x = (mobile_width as f32 * x_ratio) as i32;
             let y = (mobile_height as f32 * y_ratio) as i32;
@@ -738,8 +726,8 @@ pub async fn random_click_position(
     };
 
     // 生成随机偏移
-    let offset_x = rng.gen_range(-offset_range..=offset_range);
-    let offset_y = rng.gen_range(-offset_range..=offset_range);
+    let offset_x = rng.random_range(-offset_range..=offset_range);
+    let offset_y = rng.random_range(-offset_range..=offset_range);
 
     // 计算最终坐标
     let final_x = base_x + offset_x;

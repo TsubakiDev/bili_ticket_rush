@@ -493,7 +493,6 @@ async fn pickup_mode_grab(mut req: GrabTicketRequest, result_tx: mpsc::Sender<Ta
                             &req,
                             &information_set.token,
                             &information_set.ptoken,
-                            &information_set.now_time,
                             &result_tx,
                         )
                         .await
@@ -537,7 +536,6 @@ async fn grab_ticket_core(req: GrabTicketRequest, result_tx: mpsc::Sender<TaskRe
                     &req,
                     &information_set.token,
                     &information_set.ptoken,
-                    &information_set.now_time,
                     &result_tx,
                 )
                 .await
@@ -569,7 +567,6 @@ async fn handle_ticket_grab(
     req: &GrabTicketRequest,
     token: &str,
     ptoken: &str,
-    now_time: f64,
     result_tx: &mpsc::Sender<TaskResult>,
 ) -> bool {
     let task_id = req.task_id.clone();
@@ -582,7 +579,6 @@ async fn handle_ticket_grab(
             &req.project_id,
             token,
             ptoken,
-            now_time,
             &task_id,
             req.uid,
             result_tx,
@@ -852,7 +848,6 @@ async fn process_grab_ticket(
     project_id: &str,
     token: &str,
     ptoken: &str,
-    now_time: f64,
     task_id: &str,
     uid: i64,
     result_tx: &mpsc::Sender<TaskResult>,
@@ -869,7 +864,6 @@ async fn process_grab_ticket(
                 project_id,
                 token,
                 ptoken,
-                now_time,
                 &confirm_result,
                 grab_ticket_req,
                 buyer_info,
@@ -897,7 +891,6 @@ async fn try_create_order(
     project_id: &str,
     token: &str,
     ptoken: &str,
-    now_time: f64,
     confirm_result: &ConfirmTicketResult,
     grab_ticket_req: &GrabTicketRequest,
     buyer_info: &Vec<BuyerInfo>,
@@ -922,7 +915,6 @@ async fn try_create_order(
             project_id,
             token,
             ptoken,
-            now_time,
             confirm_result,
             &grab_ticket_req.biliticket,
             buyer_info,

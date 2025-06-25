@@ -58,7 +58,6 @@ pub struct InformationSet {
     pub token: String,
     pub ptoken: String,
     pub ctoken: String,
-    pub now_time: i64,
 }
 
 //确认订单结构体
@@ -261,9 +260,9 @@ impl Default for SaleFlag {
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct ScreenTicketInfo {
     #[serde(rename = "saleStart")]
-    pub sale_start: usize, //开售时间(时间戳)   eg: 1720260000
+    pub sale_start_serded: usize, //开售时间(时间戳)   eg: 1720260000
     #[serde(rename = "saleEnd")]
-    pub sale_end: usize, //截止时间(时间戳)
+    pub sale_end_serded: usize, //截止时间(时间戳)
     pub id: usize,               //票种id
     pub project_id: usize,       //项目id
     pub price: usize,            //票价(分)

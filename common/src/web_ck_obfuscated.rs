@@ -453,8 +453,6 @@ pub fn generate_ctoken(prepare_time: u64) -> String {
     let touch_time = 66 + rng.gen_range(5..10) as u64;
     let page_visible_time = 5 + rng.gen_range(0..2) as u64;
     let open_window_time = 3 + rng.gen_range(0..2) as u64;
-    let timer_time = 5 + rng.gen_range(1..3) as u64;
-    let time_interval = 2;
 
     let mut data = [0u8; 16];
 
