@@ -227,7 +227,7 @@ impl Myapp {
             client: Client::new(),
             default_avatar_texture: None,
             running_status: String::from("空闲ing"),
-            ticket_id: String::from("101751"),
+            ticket_id: String::from("102194"),
             // 初始化任务管理器
             task_manager: Box::new(TaskManagerImpl::new()),
             account_manager: AccountManager {
