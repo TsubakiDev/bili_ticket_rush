@@ -22,7 +22,7 @@ serde_json = "1.0"
 
 reqwest = { version="0.11.22", features=["json", "blocking", "cookies"]}
 
-base64 = "0.21"
+base64 = "0.22"
 aes = "0.7.5"
 block-modes = "0.8.1"
 machine-uid = "0.5.3"
