@@ -771,10 +771,10 @@ pub async fn random_click_position(
     // 根据模式生成不同的延迟时间
     let random_delay = if fast_mode {
         // 快模式: 0.8-4.6秒
-        rng.gen_range(800..4600)
+        rng.random_range(800..4600)
     } else {
         // 慢模式: 4-12秒
-        rng.gen_range(4000..12000)
+        rng.random_range(4000..12000)
     };
 
     // 计算起始时间
