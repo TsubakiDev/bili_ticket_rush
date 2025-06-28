@@ -509,7 +509,7 @@ async fn pickup_mode_grab(mut req: GrabTicketRequest, result_tx: mpsc::Sender<Ta
             }
         }
 
-        tokio::time::sleep(Duration::from_secs(2)).await;
+        //tokio::time::sleep(Duration::from_secs(2)).await;
     }
 }
 
@@ -1006,7 +1006,7 @@ async fn try_create_order(
                     }
                     900001 => {
                         log::info!("订单校验盾限制/提前下单惩罚");
-                        //tokio::time::sleep(tokio::time::Duration::from_secs_f32(0.9)).await;
+                        //tokio::time::sleep(tokio::time::Duration::from_secs_f32(0.2)).await;
                     }
                     900002 => {
                         log::info!("订单校验盾流量控制");
@@ -1018,7 +1018,7 @@ async fn try_create_order(
                     }
                     100009 => {
                         log::info!("当前票种库存不足");
-                        tokio::time::sleep(tokio::time::Duration::from_secs_f32(0.6)).await;
+                        return Some((true, false));
                     }
                     100008 => {
                         log::info!("有尚未完成的订单, 请前往b站订单列表查看");
@@ -1087,7 +1087,7 @@ async fn try_create_order(
         }
 
         // 增加重试计数并等待
-        
+        /*
         order_retry_count += 1;
         if grab_ticket_req.grab_mode == 2 && order_retry_count >= 30 {
             log::error!(
@@ -1095,6 +1095,7 @@ async fn try_create_order(
             );
             return Some((false, true)); // 捡漏模式下单失败, 放弃该票种抢票
         }
+        */
         
         //tokio::time::sleep(tokio::time::Duration::from_secs_f32(0.4)).await;
         //降低速度, 不带来b站服务器压力
