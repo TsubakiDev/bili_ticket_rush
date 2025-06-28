@@ -1087,6 +1087,7 @@ async fn try_create_order(
         }
 
         // 增加重试计数并等待
+        /*
         order_retry_count += 1;
         if grab_ticket_req.grab_mode == 2 && order_retry_count >= 30 {
             log::error!(
@@ -1095,6 +1096,7 @@ async fn try_create_order(
             return Some((false, true)); // 捡漏模式下单失败, 放弃该票种抢票
         }
         tokio::time::sleep(tokio::time::Duration::from_secs_f32(0.4)).await;
+        */
         //降低速度, 不带来b站服务器压力
     }
 }
