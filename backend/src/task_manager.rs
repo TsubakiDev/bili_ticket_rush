@@ -1001,16 +1001,16 @@ async fn try_create_order(
                     //需要继续重试的临时错误
                     100001 => log::info!("请重新登录, 可能是cookie过期或无效"),
                     429 => {
-                        log::info!("b站限速, 延迟50ms请求");
-                        tokio::time::sleep(tokio::time::Duration::from_secs_f32(0.05)).await;
+                        log::info!("b站限速, 延迟800ms请求");
+                        tokio::time::sleep(tokio::time::Duration::from_secs_f32(0.8)).await;
                     }
                     900001 => {
                         log::info!("订单校验盾限制/提前下单惩罚");
-                        tokio::time::sleep(tokio::time::Duration::from_secs_f32(0.9)).await;
+                        //tokio::time::sleep(tokio::time::Duration::from_secs_f32(0.9)).await;
                     }
                     900002 => {
                         log::info!("订单校验盾流量控制");
-                        tokio::time::sleep(tokio::time::Duration::from_secs_f32(0.05)).await;
+                        //tokio::time::sleep(tokio::time::Duration::from_secs_f32(0.05)).await;
                     }
                     100041 => {
                         log::info!("提前下单, 开票后触发5分钟 900001 处罚");
