@@ -1018,7 +1018,6 @@ async fn try_create_order(
                     }
                     100009 => {
                         log::info!("当前票种库存不足");
-                        return Some((true, false));
                     }
                     100008 => {
                         log::info!("有尚未完成的订单, 请前往b站订单列表查看");
