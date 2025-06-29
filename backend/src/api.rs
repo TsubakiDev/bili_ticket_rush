@@ -325,7 +325,7 @@ pub async fn get_ticket_token(
                                     });
                                 }
 
-                                let ptoken = json["data"]["ptoken"].as_str().unwrap_or("");
+                                let ptoken = json["data"]["ptoken"].as_str().unwrap_or("").strip_suffix('=').unwrap();
                                 let ctoken = generate_ctoken(prepare_time);
                                 return Ok(InformationSet {
                                     token: token.to_string(),
