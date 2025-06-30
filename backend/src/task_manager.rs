@@ -509,7 +509,7 @@ async fn pickup_mode_grab(mut req: GrabTicketRequest, result_tx: mpsc::Sender<Ta
             }
         }
 
-        tokio::time::sleep(Duration::from_secs(2)).await;
+        tokio::time::sleep(Duration::from_secs(1)).await;
     }
 }
 
@@ -1095,7 +1095,7 @@ async fn try_create_order(
             return Some((false, true)); // 捡漏模式下单失败, 放弃该票种抢票
         }
         */
-        
+
         tokio::time::sleep(tokio::time::Duration::from_secs_f32(0.4)).await;
         //降低速度, 不带来b站服务器压力
     }

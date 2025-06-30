@@ -2,7 +2,6 @@ use common::cookie_manager::CookieManager;
 use common::http_utils::request_get;
 use common::login::QrCodeLoginStatus;
 use common::ticket::*;
-use common::web_ck_obfuscated::generate_ctoken;
 use rand::Rng;
 use reqwest::Client;
 use serde_json;
@@ -10,6 +9,10 @@ use serde_json::{Value, json};
 use std::collections::HashMap;
 use std::sync::Arc;
 use std::time::{SystemTime, UNIX_EPOCH};
+
+use crate::ctoken::generate_ctoken;
+
+static mut START_TIME: u64 = 0;
 
 pub async fn get_countdown(
     cookie_manager: Arc<CookieManager>,
@@ -20,6 +23,9 @@ pub async fn get_countdown(
         Some(info) => info.sale_begin,
         None => return Err("获取开始时间失败".to_string()),
     };
+
+    unsafe { START_TIME = sale_begin_sec as u64};
+
     log::debug!("获取开始时间(秒级): {}", sale_begin_sec);
 
     // 获取网络时间 (秒级)
@@ -259,11 +265,6 @@ pub async fn get_ticket_token(
     count: i16,
     is_hot_project: bool,
 ) -> Result<InformationSet, TokenRiskParam> {
-    let prepare_time = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap_or_default()
-        .as_millis() as u64;
-
     let params = if is_hot_project {
         json!({
             "project_id": project_id,
@@ -281,7 +282,7 @@ pub async fn get_ticket_token(
             "sku_id": ticket_id,
             "count": count,
             "order_type": 1,
-            "token": generate_ctoken(prepare_time),
+            "token": generate_ctoken("prepare", unsafe { START_TIME }, 0, rand::rng().random_range(2000..10000)),
             "requestSource": "neul-next",
             "newRisk": "true",
         })
@@ -325,8 +326,12 @@ pub async fn get_ticket_token(
                                     });
                                 }
 
-                                let ptoken = json["data"]["ptoken"].as_str().unwrap_or("").strip_suffix('=').unwrap();
-                                let ctoken = generate_ctoken(prepare_time);
+                                let ptoken = json["data"]["ptoken"]
+                                    .as_str()
+                                    .unwrap_or("")
+                                    .strip_suffix('=')
+                                    .unwrap();
+                                let ctoken = generate_ctoken("prepare", unsafe { START_TIME }, 0, rand::rng().random_range(2000..10000));
                                 return Ok(InformationSet {
                                     token: token.to_string(),
                                     ptoken: ptoken.to_string(),
@@ -568,7 +573,7 @@ pub async fn create_order(
     let count = confirm_result.count.clone();
     let pay_money = confirm_result.pay_money.clone();
 
-    let ctoken = generate_ctoken(timestamp);
+    let ctoken = generate_ctoken("createV2", unsafe { START_TIME }, 0, rand::rng().random_range(2000..10000));
 
     let ticket_id = match biliticket.select_ticket_id.clone() {
         Some(id) => id,

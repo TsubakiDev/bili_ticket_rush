@@ -1,5 +1,3 @@
-use base64::Engine;
-use base64::prelude::BASE64_STANDARD;
 use chrono::{Local as _l1, Utc as _u1};
 use hmac::{Hmac as _h1, Mac as _m1};
 use md5;
@@ -434,54 +432,6 @@ pub fn gen_01x88() -> String {
     } else {
         _result
     }
-}
-
-pub fn generate_ctoken(prepare_time: u64) -> String {
-    let current_time_ms = std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
-        .expect("Time went backwards")
-        .as_millis() as u64;
-
-    let calculated_time = (current_time_ms - prepare_time) as f64 / 1000.0;
-    let mut sec_from_prepare = calculated_time.floor() as u16;
-    if sec_from_prepare <= 0 {
-        sec_from_prepare = 1;
-    }
-
-    let mut rng = rand::thread_rng();
-
-    let touch_time = 66 + rng.gen_range(5..10) as u64;
-    let page_visible_time = 5 + rng.gen_range(0..2) as u64;
-    let open_window_time = 3 + rng.gen_range(0..2) as u64;
-
-    let mut data = [0u8; 16];
-
-    data[0..8].copy_from_slice(&[
-        touch_time.min(255) as u8,
-        0,
-        page_visible_time.min(255) as u8,
-        0,
-        255,
-        open_window_time.min(255) as u8,
-        255,
-        255,
-    ]);
-
-    let sec_bytes = sec_from_prepare.to_be_bytes();
-    data[8..10].copy_from_slice(&sec_bytes);
-
-    let calc_bytes = calculated_time.floor() as u16;
-    data[10..12].copy_from_slice(&calc_bytes.to_be_bytes());
-
-    data[12..16].copy_from_slice(&[255, 0, 0, 255]);
-
-    let mut expanded = Vec::with_capacity(32);
-    for &b in &data {
-        expanded.push(b);
-        expanded.push(0);
-    }
-
-    BASE64_STANDARD.encode(&expanded)
 }
 
 fn _rand_bool(probability: f64) -> bool {
